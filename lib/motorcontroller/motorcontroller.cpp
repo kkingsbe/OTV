@@ -39,7 +39,7 @@ void MotorController::commandMotors() {
     digitalWrite(M1, this->motors.left > 0 ? HIGH : LOW);
     digitalWrite(M2, this->motors.right > 0 ? HIGH : LOW);
 
-    float maxSpeed = this->motors.driveSpeed * 255;
+    float maxSpeed = this->motors.driveSpeed * 200;//255;
 
     //Serial.println("Max Speed: " + String(maxSpeed) + "Left: " + String(abs(this->motors.left) * maxSpeed));
 

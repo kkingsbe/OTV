@@ -12,34 +12,34 @@ void setup() {
   motorController->setDriveSpeed(1.0);
 }
 
-float i = -1.0;
+float i = -0.2;
 bool increasing = true;
 
 void loop() {
-  /*
   motorController->setSteerBias(i);
   
-  if(i >= 1.0) {
+  if(i >= 0.2) {
     increasing = false;
   }
 
-  if(i <= -1.0) {
+  if(i <= -0.2) {
     increasing = true;
   }
 
   if(increasing) {
-    i += 0.05;
+    i += 0.01;
   } else {
-    i -= 0.05;
+    i -= 0.01;
   }
   motorController->tick();
-  */
 
+  /*
   RangeData range = sensorManager->getRange();
   
   // Write values to serial port
   Serial.print("Distance: ");
   Serial.print(range.front);
   Serial.println("cm");
-  //delay();
+  */
+  delay(30);
 }
