@@ -3,7 +3,6 @@
 
 #include <DistanceSensor.h>
 
-//Configure sensor pins here
 #define FRONT_TRIG 13
 #define FRONT_ECHO 12
 #define LEFT_TRIG 11
