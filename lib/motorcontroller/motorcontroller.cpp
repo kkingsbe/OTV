@@ -23,15 +23,16 @@ void MotorController::setDriveSpeed(float speed) {
 */
 void MotorController::setSteerBias(float steerAngle) {
     if(steerAngle < 0) {
-        this->motors.left = 0.5 - (-1 * steerAngle);
+        this->motors.left = 0.5 - (-1.5 * steerAngle);
         this->motors.right = 1.0;
     } else if(steerAngle > 0) {
         this->motors.left = 1.0;
-        this->motors.right = 0.5 - steerAngle;
+        this->motors.right = 0.5 - (1.5 * steerAngle);
     } else {
         this->motors.left = 1.0;
         this->motors.right = 1.0;
     }
+    Serial.println("Left: " + String(this->motors.left));
 }
 
 void MotorController::commandMotors() {
@@ -40,7 +41,7 @@ void MotorController::commandMotors() {
 
     float maxSpeed = this->motors.driveSpeed * 255;
 
-    Serial.println("Max Speed: " + String(maxSpeed) + "Left: " + String(abs(this->motors.left) * maxSpeed) + "Right: " + String(abs(this->motors.right) * maxSpeed));
+    //Serial.println("Max Speed: " + String(maxSpeed) + "Left: " + String(abs(this->motors.left) * maxSpeed));
 
     analogWrite(E1, abs(this->motors.left) * maxSpeed);
     analogWrite(E2, abs(this->motors.right) * maxSpeed);
