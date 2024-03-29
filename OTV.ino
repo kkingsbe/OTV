@@ -1,5 +1,5 @@
-#include "motorcontroller.h"
-#include "sensormanager.h"
+#include "src/motorcontroller/motorcontroller.h"
+#include "src/sensormanager/sensormanager.h"
 #include <DistanceSensor.h>
 
 MotorController* motorController = new MotorController();
