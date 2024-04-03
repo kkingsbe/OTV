@@ -11,7 +11,8 @@
                 "C:/Program Files (x86)/Arduino/hardware/tools/avr/avr/include",
                 "C:/Users/kking/Documents/Arduino/libraries",
                 "C:/Users/kking/Documents/Arduino/libraries/**",
-                "${workspaceFolder}/lib/sensormanager"
+                "${workspaceFolder}/lib/sensormanager",
+                "C:/Program Files (x86)/Arduino/hardware/arduino/avr/libraries/SoftwareSerial/src"
             ],
             "defines": [
                 "_DEBUG",
