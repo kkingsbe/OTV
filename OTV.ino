@@ -10,14 +10,14 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   motorController->init();
-  motorController->setDriveSpeed(0.7);
+  motorController->setDriveSpeed(0.6);
   Enes100.begin("MATTerials", MATERIAL, 247, 3,2);
 }
 
-float target_1_x = 1.0;
-float target_1_y = 0.5;
-float target_2_x = 1.0;
-float target_2_y = 1.5;
+float target_1_x = 0.5;
+float target_1_y = 1.0;
+float target_2_x = 1.75;
+float target_2_y = 1.0;
 
 bool target1 = true;
 
@@ -28,7 +28,7 @@ long target_start_time = millis();
 long max_target_time = 10000;
 
 float precise_drive_speed = 0.4;
-float waypoint_distance_threshold = 0.1; //m
+float waypoint_distance_threshold = 0.25; //m
 
 void loop() {
   float dt = (millis() - last_time) / 1000.0;
@@ -64,10 +64,15 @@ void loop() {
 
   //Left-handed rotation for some reason
   float heading_error = theta - desired_heading;
+  if (heading_error > 3.14159) {
+      heading_error -= 2 * 3.14159;
+  } else if (heading_error < -3.14159) {
+      heading_error += 2 * 3.14159;
+  }
 
-  float kp = 0.1;
-  float ki = 0.0;//0.005;
-  float kd = 0.01;
+  float kp = 0.16;
+  float ki = 0.008;
+  float kd = 0.14; //less than 0.05
 
   integral += heading_error * dt;
   float derivative = (heading_error - prev_err) / dt;
@@ -96,6 +101,8 @@ void loop() {
       target_start_time = millis();
     }
   }
+
+  prev_err = heading_error;
 
   delay(30);
 }
