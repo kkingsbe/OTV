@@ -10,16 +10,18 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   motorController->init();
-  motorController->setDriveSpeed(0.6);
+  motorController->setDriveSpeed(1.0);
   Enes100.begin("MATTerials", MATERIAL, 247, 3,2);
 }
 
 float target_1_x = 0.5;
-float target_1_y = 1.0;
+float target_1_y = 0.5;
 float target_2_x = 1.75;
 float target_2_y = 1.0;
+float target_3_x = 0.5;
+float target_3_y = 1.5;
 
-bool target1 = true;
+int active_target = 1;
 
 float prev_err = 0.0;
 float integral = 0.0;
@@ -48,8 +50,19 @@ void loop() {
 
   bool v = Enes100.isVisible();
 
-  float target_x = target1 ? target_1_x : target_2_x;
-  float target_y = target1 ? target_1_y : target_2_y;
+  float target_x = 0;
+  float target_y = 0;
+
+  if(active_target == 1) {
+    target_x = target_1_x;
+    target_y = target_1_y;
+  } else if(active_target == 2) {
+    target_x = target_2_x;
+    target_y = target_2_y;
+  } else if(active_target == 3) {
+    target_x = target_3_x;
+    target_y = target_3_y;  
+  }
 
   float ex = target_x - x;
   float ey = target_y - y;
@@ -70,7 +83,7 @@ void loop() {
       heading_error += 2 * 3.14159;
   }
 
-  float kp = 0.16;
+  float kp = 0.3;
   float ki = 0.008;
   float kd = 0.14; //less than 0.05
 
@@ -85,7 +98,7 @@ void loop() {
   //motorController->setDriveSpeed(new_speed);
 
   //Serial.println("ex: " + String(ex) + " ey: " + String(ey) + " theta: " + String(theta) + " desired_heading: " + String(desired_heading) + " heading_error: " + String(heading_error));
-  Enes100.println("Target 1?: " + String(target1 ? "yes" : "no") + " Heading error: " + String(heading_error) + "rad. Steer bias: " + String(setpoint) + " Drive Speed: " + String(new_speed));
+  //Enes100.println("Target 1?: " + String(target1 ? "yes" : "no") + " Heading error: " + String(heading_error) + "rad. Steer bias: " + String(setpoint) + " Drive Speed: " + String(new_speed));
 
   motorController->setSteerBias(setpoint);
   motorController->tick();
@@ -93,13 +106,13 @@ void loop() {
   Serial.println("Target time: " + String(millis() - target_start_time) + "ms");
 
   if(sqrt(ex*ex + ey*ey) < waypoint_distance_threshold) {
-    if(target1) {
-      target1 = false;
-      target_start_time = millis();
+    if(active_target == 3) {
+      active_target = 1;
     } else {
-      target1 = true;
-      target_start_time = millis();
+      active_target ++;
     }
+
+    target_start_time = millis();
   }
 
   prev_err = heading_error;
