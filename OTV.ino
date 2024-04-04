@@ -34,6 +34,7 @@ void loop() {
   last_time = millis();
   
   */
+ /*
   guidanceManager->tick();
   float setpoint = guidanceManager->getUpdatedSteerBias();
   motorController->setSteerBias(setpoint);  
@@ -46,6 +47,26 @@ void loop() {
   if(guidanceManager->getDistanceError() < waypoint_distance_threshold) {
     guidanceManager->nextWaypoint();
   }
-  
-  delay(30);
+  */
+
+  motorController->setSteerBias(0.0);
+  motorController->tick(); 
+  delay(2000);
+  motorController->setSteerBias(1.0);
+  motorController->tick();
+  delay(1000);
+  motorController->setSteerBias(-1.0);
+  motorController->tick();
+  delay(1000);
+  motorController->setSteerBias(-0.5);
+  motorController->tick();
+  delay(1000);
+  motorController->setSteerBias(0.5);
+  motorController->tick();
+  delay(1000);
+  motorController->setSteerBias(0.0);
+  motorController->tick();
+  delay(2000);
+  motorController->setDriveSpeed(0.0);
+  delay(10000);
 }
