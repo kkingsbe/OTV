@@ -31,6 +31,7 @@ public:
     float getHeadingError();
     float getDistanceError();
     void tick();
+    void init();
 
 private:
     Waypoint waypoints[MAX_WAYPOINTS];

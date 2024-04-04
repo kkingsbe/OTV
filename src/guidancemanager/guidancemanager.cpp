@@ -5,12 +5,17 @@
 GuidanceManager::GuidanceManager():
     total_waypoints(0),
     integral(0),
+    active_waypoint(0),
     last_time(millis()),
     prev_err(0),
     pid_config(new PIDConfig{0.0, 0.0, 0.0}),
     vehicle_position(new VehiclePosition{0.0, 0.0, 0.0})
 {
+}
+
+void GuidanceManager::init() {
     Enes100.begin("MATTerials", MATERIAL, 247, 3,2);
+    Serial.println("Vision system online");
 }
 
 void GuidanceManager::tick() {
@@ -52,13 +57,27 @@ void GuidanceManager::updateLocation() {
 }
 
 float GuidanceManager::getUpdatedSteerBias() {
+    bool v = Enes100.isVisible();
+
     float heading_error = getHeadingError();
-    long dt = millis() - last_time;
+    float dt = (millis() - last_time) / 1000.0;
     last_time = millis();
+
+    if(!v) heading_error = prev_err;
 
     integral += heading_error * dt;
     float derivative = (heading_error - prev_err) / dt;
-    float setpoint = (pid_config->kd * heading_error) + (pid_config->ki * integral) + (pid_config->kd * derivative);
+    prev_err = heading_error;
+    
+    float p_term = pid_config->kp * heading_error;
+    float i_term = pid_config->ki * integral;
+    float d_term = pid_config->kd * derivative;
+
+    float setpoint = p_term + i_term + d_term;
+    
+    Enes100.println("Heading err: " + String(heading_error) + "Setpoint: " + String(setpoint));
+
+    return setpoint;
 }
 
 void GuidanceManager::nextWaypoint() {
@@ -88,12 +107,16 @@ float GuidanceManager::getHeadingError() {
         heading_error += 2 * 3.14159;
     }
 
+    //Enes100.println("Heading Error: " + String(heading_error) + " Desired Heading: " + String(desired_heading) + " Vehicle Heading: " + String(vehicle_position->theta));
+
     return heading_error;
 }
 
 float GuidanceManager::getDistanceError() {
     float ex = waypoints[active_waypoint].x - vehicle_position->x;
     float ey = waypoints[active_waypoint].y - vehicle_position->y;
+
+    //Enes100.println("X Dist: " + String(ex) + " Y Dist: " + String(ey));
 
     return sqrt(ex*ex + ey*ey);
 }
