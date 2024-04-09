@@ -1,7 +1,6 @@
 #include "src/motorcontroller/motorcontroller.h"
 #include "src/sensormanager/sensormanager.h"
 #include "src/guidancemanager/guidancemanager.h"
-#include <DistanceSensor.h>
 
 MotorController* motorController = new MotorController();
 SensorManager* sensorManager = new SensorManager();
@@ -11,6 +10,8 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   Serial.println("Initializing...");
+
+  sensorManager->init();
 
   motorController->init();
   motorController->setDriveSpeed(1.0);
@@ -46,6 +47,9 @@ void loop() {
   if(guidanceManager->getDistanceError() < waypoint_distance_threshold) {
     guidanceManager->nextWaypoint();
   }
+
+  RangeData rd = sensorManager->getRange();
+  Serial.println("Distance: " + String(rd.front));
   
   delay(30);
 }

@@ -1,7 +1,7 @@
 #ifndef SENSOR_MANAGER_H
 #define SENSOR_MANAGER_H
 
-#include <DistanceSensor.h>
+#include <Arduino.h>
 
 //Configure sensor pins here
 #define FRONT_TRIG 13
@@ -17,16 +17,20 @@ struct RangeData {
     float right;
 };
 
+enum UltrasonicSensor {
+    FRONT,
+    LEFT,
+    RIGHT
+};
+
 class SensorManager {
 public:
     SensorManager(); // Constructor
+    void init();
+    long takeReading(UltrasonicSensor sensor);
+    float durationToCm(long duration); // Function to convert duration to cm (for ultrasonic sensors
     float getWeight(); // Function to get the weight determined by the loadcells
     RangeData getRange(); // Function to get the range determined by the ultrasonic sensor
-
-private:
-    DistanceSensor left_ultra;
-    DistanceSensor right_ultra;
-    DistanceSensor front_ultra;
 };
 
 #endif // SENSOR_MANAGER_H
