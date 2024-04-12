@@ -40,16 +40,15 @@ void loop() {
   motorController->setSteerBias(setpoint);  
   motorController->tick();
 
+  /*
   float distance_error = guidanceManager->getDistanceError();
-
-  Serial.println("Setpoint: " + String(setpoint));
 
   if(guidanceManager->getDistanceError() < waypoint_distance_threshold) {
     guidanceManager->nextWaypoint();
   }
-
+  */
   RangeData rd = sensorManager->getRange();
-  Serial.println("Distance: " + String(rd.front));
-  
+  Serial.println("Front: " + String(rd.front) + " | Left: " + String(rd.left) + " | Right: " + String(rd.right));
+
   delay(30);
 }

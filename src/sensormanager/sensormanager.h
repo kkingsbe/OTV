@@ -4,12 +4,14 @@
 #include <Arduino.h>
 
 //Configure sensor pins here
-#define FRONT_TRIG 13
-#define FRONT_ECHO 12
-#define LEFT_TRIG 11
-#define LEFT_ECHO 10
-#define RIGHT_TRIG 9
-#define RIGHT_ECHO 8
+#define FRONT_L_TRIG 13
+#define FRONT_L_ECHO 12
+#define FRONT_R_TRIG 11
+#define FRONT_R_ECHO 10
+#define LEFT_TRIG 9
+#define LEFT_ECHO 8
+#define RIGHT_TRIG 7
+#define RIGHT_ECHO 6
 
 struct RangeData {
     float front;
