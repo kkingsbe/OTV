@@ -4,23 +4,25 @@
 #include <Arduino.h>
 
 //Configure sensor pins here
-#define FRONT_L_TRIG 13
-#define FRONT_L_ECHO 12
-#define FRONT_R_TRIG 11
-#define FRONT_R_ECHO 10
-#define LEFT_TRIG 9
-#define LEFT_ECHO 8
-#define RIGHT_TRIG 7
-#define RIGHT_ECHO 6
+#define FRONT_L_TRIG 10 //working
+#define FRONT_L_ECHO 12 //working
+#define FRONT_R_TRIG 13
+#define FRONT_R_ECHO 11
+#define LEFT_TRIG 13 //working
+#define LEFT_ECHO 9 //working
+#define RIGHT_TRIG 6
+#define RIGHT_ECHO 8
 
 struct RangeData {
-    float front;
+    float front_l;
+    float front_r;
     float left;
     float right;
 };
 
 enum UltrasonicSensor {
-    FRONT,
+    FRONT_L,
+    FRONT_R,
     LEFT,
     RIGHT
 };

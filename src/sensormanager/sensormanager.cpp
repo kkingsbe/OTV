@@ -11,15 +11,21 @@ void SensorManager::init() {
     pinMode(LEFT_ECHO, INPUT);
     pinMode(FRONT_R_TRIG, OUTPUT);
     pinMode(FRONT_R_ECHO, INPUT);
+    pinMode(FRONT_L_TRIG, OUTPUT);
+    pinMode(FRONT_L_ECHO, INPUT);
 }
 
 long SensorManager::takeReading(UltrasonicSensor sensor) {   
     int trigPin;
     int echoPin;
     switch(sensor) {
-        case FRONT:
+        case FRONT_R:
             trigPin = FRONT_R_TRIG;
             echoPin = FRONT_R_ECHO;
+            break;
+        case FRONT_L:
+            trigPin = FRONT_L_TRIG;
+            echoPin = FRONT_L_ECHO;
             break;
         case LEFT:
             trigPin = LEFT_TRIG;
@@ -37,8 +43,7 @@ long SensorManager::takeReading(UltrasonicSensor sensor) {
     digitalWrite(trigPin, HIGH);
     delayMicroseconds(10);
     digitalWrite(trigPin, LOW);
-    duration = pulseIn(echoPin, HIGH/*, 30000*/);
-    Serial.println("Duration: " + String(duration) + " microseconds");
+    duration = pulseIn(echoPin, HIGH, 30000);
     return duration;
 }
 
@@ -47,21 +52,16 @@ float SensorManager::durationToCm(long duration) {
 }
 
 RangeData SensorManager::getRange() {
-    Serial.println("Taking readings:");
-    Serial.println("Front...");
-    long dur_front = takeReading(FRONT);
-    Serial.println("Left...");
+    long dur_front_l = takeReading(FRONT_L);
+    long dur_front_r = takeReading(FRONT_R);
     long dur_left = takeReading(LEFT);
-    Serial.println("Right...");
     long dur_right = takeReading(RIGHT);
-    Serial.println("Done taking readings. Converting to cm");
 
     RangeData range;
-    range.front = durationToCm(dur_front);
+    range.front_l = durationToCm(dur_front_l);
+    range.front_r = durationToCm(dur_front_r);
     range.left = durationToCm(dur_left);
     range.right = durationToCm(dur_right);
-
-    Serial.println("Converted to cm. Returning...");
 
     return range;
 }

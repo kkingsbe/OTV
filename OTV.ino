@@ -48,7 +48,7 @@ void loop() {
   }
   */
   RangeData rd = sensorManager->getRange();
-  Serial.println("Front: " + String(rd.front) + " | Left: " + String(rd.left) + " | Right: " + String(rd.right));
+  Serial.println("Front Left: " + String(rd.front_l) + " | Front Right: " + String(rd.front_r) + " | Left: " + String(rd.left) + " | Right: " + String(rd.right));
 
   delay(30);
 }
