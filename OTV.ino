@@ -16,9 +16,6 @@ void setup() {
   motorController->init();
   motorController->setDriveSpeed(1.0);
 
-  Serial.println("Skipping guidance manager config");
-
-  /*
   Serial.println("Setting up guidance manager");
 
   guidanceManager->init();
@@ -27,7 +24,6 @@ void setup() {
   guidanceManager->addWaypoint(0.5, 0.5);
   guidanceManager->addWaypoint(1.75, 1.0);
   guidanceManager->addWaypoint(0.5, 1.0);
-  */
 }
 
 long last_time = millis();
@@ -37,23 +33,22 @@ void loop() {
   /*
   float dt = (millis() - last_time) / 1000.0;
   last_time = millis();
-  
   */
-  //guidanceManager->tick();
-  //float setpoint = guidanceManager->getUpdatedSteerBias();
-  //motorController->setSteerBias(setpoint);  
-  //motorController->tick();
 
-  /*
+  RangeData rd = sensorManager->getRange();
+  //Serial.println("Front Left: " + String(rd.front_l) + " | Front Right: " + String(rd.front_r) + " | Left: " + String(rd.left) + " | Right: " + String(rd.right));
+  
+  guidanceManager->setRangeData(&rd);
+  guidanceManager->tick();
+  float setpoint = guidanceManager->getUpdatedSteerBias();
+  motorController->setSteerBias(setpoint);  
+  motorController->tick();
+
   float distance_error = guidanceManager->getDistanceError();
 
   if(guidanceManager->getDistanceError() < waypoint_distance_threshold) {
     guidanceManager->nextWaypoint();
   }
-  */
-  
-  RangeData rd = sensorManager->getRange();
-  Serial.println("Front Left: " + String(rd.front_l) + " | Front Right: " + String(rd.front_r) + " | Left: " + String(rd.left) + " | Right: " + String(rd.right));
 
   delay(30);
 }

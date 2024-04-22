@@ -52,20 +52,11 @@ float SensorManager::durationToCm(long duration) {
 }
 
 RangeData SensorManager::getRange() {
-    int triggerDelay = 1;
-
     long dur_front_l = takeReading(FRONT_L);
-    delay(triggerDelay);
-
     long dur_front_r = takeReading(FRONT_R);
-    delay(triggerDelay);
-
     long dur_left = takeReading(LEFT);
-    delay(triggerDelay);
-
     long dur_right = takeReading(RIGHT);
-    delay(triggerDelay);
-
+    
     RangeData range;
     range.front_l = durationToCm(dur_front_l);
     range.front_r = durationToCm(dur_front_r);
