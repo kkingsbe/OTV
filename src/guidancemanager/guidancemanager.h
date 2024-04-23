@@ -18,6 +18,7 @@ struct VehiclePosition {
     float x;
     float y;
     float theta;
+    bool valid;
 };
 
 class GuidanceManager {
@@ -32,6 +33,8 @@ public:
     float getDistanceError();
     void tick();
     void init();
+    VehiclePosition* getPosition();
+    Waypoint* getWaypoint(int index);
 
 private:
     Waypoint waypoints[MAX_WAYPOINTS];

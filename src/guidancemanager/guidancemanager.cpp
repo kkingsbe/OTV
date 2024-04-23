@@ -9,7 +9,7 @@ GuidanceManager::GuidanceManager():
     last_time(millis()),
     prev_err(0),
     pid_config(new PIDConfig{0.0, 0.0, 0.0}),
-    vehicle_position(new VehiclePosition{0.0, 0.0, 0.0})
+    vehicle_position(new VehiclePosition{-1.0, -1.0, 0.0, false})
 {
 }
 
@@ -36,8 +36,11 @@ void GuidanceManager::addWaypoint(float x, float y) {
 
 void GuidanceManager::setActiveWaypoint(int index) {
     if(index < 0 || index >= total_waypoints) {
+        Enes100.println("GuidanceManager: ERROR! Attempted to set active waypoint to " + String(index + 1) + ", but there are only " + String(total_waypoints));
         return;
     }
+
+    Enes100.println("GuidanceManager: Setting active waypoint to " + String(index + 1));
 
     active_waypoint = index;
 }
@@ -47,6 +50,9 @@ void GuidanceManager::updateLocation() {
     vehicle_position->x = Enes100.getX();
     vehicle_position->y = Enes100.getY();
     vehicle_position->theta = Enes100.getTheta();
+
+    if(!Enes100.isVisible()) vehicle_position->valid = false;
+    else vehicle_position->valid = true;
 
     while(vehicle_position->theta < 0) {
         vehicle_position->theta += 2*3.14159;
@@ -75,7 +81,7 @@ float GuidanceManager::getUpdatedSteerBias() {
 
     float setpoint = p_term + i_term + d_term;
     
-    Enes100.println("Heading err: " + String(heading_error) + "Setpoint: " + String(setpoint));
+    //Enes100.println("Heading err: " + String(heading_error) + "Setpoint: " + String(setpoint));
 
     return setpoint;
 }
@@ -119,4 +125,16 @@ float GuidanceManager::getDistanceError() {
     //Enes100.println("X Dist: " + String(ex) + " Y Dist: " + String(ey));
 
     return sqrt(ex*ex + ey*ey);
+}
+
+VehiclePosition* GuidanceManager::getPosition() {
+    return vehicle_position;
+}
+
+Waypoint* GuidanceManager::getWaypoint(int index) {
+    if(index >= total_waypoints) {
+        return nullptr;
+    }
+
+    return &waypoints[index];
 }
