@@ -81,15 +81,17 @@ float GuidanceManager::getUpdatedSteerBias() {
 
     float setpoint = p_term + i_term + d_term;
     
-    //Enes100.println("Heading err: " + String(heading_error) + "Setpoint: " + String(setpoint));
+    Enes100.println("Heading err: " + String(heading_error) + "Setpoint: " + String(setpoint));
 
     return setpoint;
 }
 
 void GuidanceManager::nextWaypoint() {
     if(active_waypoint < total_waypoints - 1) {
+        Enes100.println("GuidanceManager: Switching to next waypoint");
         active_waypoint++;
     } else {
+        Enes100.println("GuidanceManager: Reached final waypoint, resetting to first waypoint");
         active_waypoint = 0;
     }
 }
@@ -137,4 +139,19 @@ Waypoint* GuidanceManager::getWaypoint(int index) {
     }
 
     return &waypoints[index];
+}
+
+float GuidanceManager::getDistanceToWaypoint(int index) {
+    int origActiveWaypoint = active_waypoint;
+    
+    if(index >= total_waypoints) {
+        return -1;
+    }
+
+    //Sneakily change the active waypoint, get the distance to it, and change it back
+    setActiveWaypoint(index);
+    float dist = getDistanceError();
+    setActiveWaypoint(origActiveWaypoint);
+
+    return dist;
 }

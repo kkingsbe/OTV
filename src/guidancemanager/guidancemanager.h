@@ -33,6 +33,7 @@ public:
     float getDistanceError();
     void tick();
     void init();
+    float getDistanceToWaypoint(int index);
     VehiclePosition* getPosition();
     Waypoint* getWaypoint(int index);
 

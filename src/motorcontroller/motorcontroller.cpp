@@ -22,17 +22,15 @@ void MotorController::setDriveSpeed(float speed) {
  * @var steerAngle The steer angle to set. Ranges from -1 (full left) to 1 (full right).
 */
 void MotorController::setSteerBias(float steerAngle) {
-    if(steerAngle < 0) {
-        this->motors.left = 0.5 - (-1.5 * steerAngle);
+    float clippedAngle = constrain(steerAngle, -1.0, 1.0);
+
+    if(clippedAngle <= 0) {
+        this->motors.left = 2.0 * clippedAngle + 1.0;
         this->motors.right = 1.0;
-    } else if(steerAngle > 0) {
+    } else if(clippedAngle >= 0) {
         this->motors.left = 1.0;
-        this->motors.right = 0.5 - (1.5 * steerAngle);
-    } else {
-        this->motors.left = 1.0;
-        this->motors.right = 1.0;
+        this->motors.right = -2.0 * clippedAngle + 1.0;
     }
-    //Serial.println("Left: " + String(this->motors.left));
 }
 
 void MotorController::commandMotors() {
@@ -40,11 +38,13 @@ void MotorController::commandMotors() {
     digitalWrite(M2, this->motors.right > 0 ? LOW : HIGH);
 
     float maxSpeed = this->motors.driveSpeed * 255;
+    float speedLeft = round(abs(this->motors.left) * maxSpeed);
+    float speedRight = round(abs(this->motors.right) * maxSpeed);
 
-    //Serial.println("Left: " + String(abs(this->motors.left)) + " Right: " + String(abs(this->motors.right)));
+    Serial.println("Left: " + String(this->motors.left ? "Forwards" : "Reverse") + " " + String(speedLeft) + " Right: " + String(this->motors.right ? "Forwards" : "Reverse") + " " + String(speedRight));
 
-    analogWrite(E1, abs(this->motors.left) * maxSpeed);
-    analogWrite(E2, abs(this->motors.right) * maxSpeed);
+    analogWrite(E1, speedLeft);
+    analogWrite(E2, speedRight);
 }
 
 void MotorController::tick() {

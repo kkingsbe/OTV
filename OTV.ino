@@ -19,10 +19,14 @@ void setup() {
   Serial.println("Setting up guidance manager");
 
   guidanceManager->init();
-  guidanceManager->setPidConfig(0.2, 0.01, 0.15);
+  //guidanceManager->setPidConfig(0.2, 0.01, 0.15);
+  guidanceManager->setPidConfig(5.0, 0.0, 0.0);
 
-  guidanceManager->addWaypoint(0.52, 0.54);
-  guidanceManager->addWaypoint(0.53, 1.49);
+  //guidanceManager->addWaypoint(0.52, 0.54);
+  //guidanceManager->addWaypoint(0.53, 1.49);
+
+  guidanceManager->addWaypoint(1.0, 0.54);
+  guidanceManager->addWaypoint(1.0, 1.49);
 
   guidanceManager->setActiveWaypoint(0);
 }
@@ -35,18 +39,19 @@ bool has_init = false;
 void determineStartPoint() {
   VehiclePosition* pos = guidanceManager->getPosition();
 
-    //The two possible starting positions
-    Waypoint* waypoint0 = guidanceManager->getWaypoint(0);
-    Waypoint* waypoint1 = guidanceManager->getWaypoint(1);
-    
-    //If vehicle did not start at waypoint 0
-    Serial.println("Distance to waypoint 1: " + String(guidanceManager->getDistanceError()));
-    if(guidanceManager->getDistanceError() > waypoint_distance_threshold) {
-      guidanceManager->setActiveWaypoint(1);
-    }
+  //The two possible starting positions
+  Waypoint* waypoint0 = guidanceManager->getWaypoint(0);
+  Waypoint* waypoint1 = guidanceManager->getWaypoint(1);
+  
+  //If vehicle did not start at waypoint 0
+  Serial.println("Distance to waypoint 1: " + String(guidanceManager->getDistanceError()));
+  if(guidanceManager->getDistanceError() > waypoint_distance_threshold) {
+    guidanceManager->setActiveWaypoint(1);
+  }
 }
 
 void loop() {
+  /*
   guidanceManager->tick();
 
   //Determine starting waypoint
@@ -63,7 +68,7 @@ void loop() {
   }
 
   float setpoint = guidanceManager->getUpdatedSteerBias();
-  motorController->setSteerBias(setpoint);  
+  motorController->setSteerBias(setpoint);
   motorController->tick();
   
   float distance_error = guidanceManager->getDistanceError();
@@ -72,9 +77,14 @@ void loop() {
     guidanceManager->nextWaypoint();
   }
   
-  
   //RangeData rd = sensorManager->getRange();
   //Serial.println("Front Left: " + String(rd.front_l) + " | Front Right: " + String(rd.front_r) + " | Left: " + String(rd.left) + " | Right: " + String(rd.right));
+
+  */
+
+  motorController->setSteerBias(0.0);
+  motorController->setDriveSpeed(1.0);
+  motorController->tick();
 
   delay(30);
 }
