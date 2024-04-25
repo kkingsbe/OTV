@@ -79,7 +79,7 @@ float GuidanceManager::getUpdatedSteerBias() {
     float i_term = pid_config->ki * integral;
     float d_term = pid_config->kd * derivative;
 
-    float setpoint = p_term + i_term + d_term;
+    float setpoint = constrain(p_term + i_term + d_term, -1.0, 1.0);
     
     Enes100.println("Heading err: " + String(heading_error) + "Setpoint: " + String(setpoint));
 

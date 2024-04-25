@@ -10,23 +10,25 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   Serial.println("Initializing...");
+  delay(500);
 
-  sensorManager->init();
+  //sensorManager->init();
 
   motorController->init();
-  motorController->setDriveSpeed(1.0);
+  motorController->setDriveSpeed(0.5);
 
   Serial.println("Setting up guidance manager");
 
   guidanceManager->init();
+  guidanceManager->setPidConfig(0.5, 0.01, 0.15);
   //guidanceManager->setPidConfig(0.2, 0.01, 0.15);
-  guidanceManager->setPidConfig(5.0, 0.0, 0.0);
+  //guidanceManager->setPidConfig(5.0, 0.0, 0.0);
 
-  //guidanceManager->addWaypoint(0.52, 0.54);
-  //guidanceManager->addWaypoint(0.53, 1.49);
+  guidanceManager->addWaypoint(0.52, 0.54);
+  guidanceManager->addWaypoint(0.53, 1.49);
 
-  guidanceManager->addWaypoint(1.0, 0.54);
-  guidanceManager->addWaypoint(1.0, 1.49);
+  //guidanceManager->addWaypoint(1.0, 0.54);
+  //guidanceManager->addWaypoint(1.0, 1.49);
 
   guidanceManager->setActiveWaypoint(0);
 }
@@ -51,7 +53,6 @@ void determineStartPoint() {
 }
 
 void loop() {
-  /*
   guidanceManager->tick();
 
   //Determine starting waypoint
@@ -67,9 +68,18 @@ void loop() {
     }
   }
 
+  VehiclePosition* pos = guidanceManager->getPosition();
+
+  if(!pos->valid) {
+    Serial.println("Invalid position. Waiting");
+    motorController->setDriveSpeed(0.0);
+  } else {
+    Serial.println("Valid position. Moving");
+    motorController->setDriveSpeed(1.0);
+  }
+
   float setpoint = guidanceManager->getUpdatedSteerBias();
   motorController->setSteerBias(setpoint);
-  motorController->tick();
   
   float distance_error = guidanceManager->getDistanceError();
 
@@ -80,11 +90,6 @@ void loop() {
   //RangeData rd = sensorManager->getRange();
   //Serial.println("Front Left: " + String(rd.front_l) + " | Front Right: " + String(rd.front_r) + " | Left: " + String(rd.left) + " | Right: " + String(rd.right));
 
-  */
-
-  motorController->setSteerBias(0.0);
-  motorController->setDriveSpeed(1.0);
   motorController->tick();
-
   delay(30);
 }
