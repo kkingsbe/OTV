@@ -6,7 +6,7 @@ MotorController* motorController = new MotorController();
 SensorManager* sensorManager = new SensorManager();
 GuidanceManager* guidanceManager = new GuidanceManager();
 
-float speed = 0.5;
+float speed = 0.8;
 
 void setup() {
   // put your setup code here, to run once:
@@ -22,15 +22,22 @@ void setup() {
   Serial.println("Setting up guidance manager");
 
   guidanceManager->init();
-  guidanceManager->setPidConfig(0.8, 0.01, 0.15);
+  //Becomes unstable at kp=0.8
+  guidanceManager->setPidConfig(0.8, 0.01, 0.2);
   //guidanceManager->setPidConfig(0.2, 0.01, 0.15);
   //guidanceManager->setPidConfig(5.0, 0.0, 0.0);
 
-  guidanceManager->addWaypoint(0.52, 0.54);
-  guidanceManager->addWaypoint(0.53, 1.49);
+  //guidanceManager->addWaypoint(0.52, 0.54);
+  //guidanceManager->addWaypoint(0.53, 1.49);
 
-  //guidanceManager->addWaypoint(1.0, 0.54);
-  //guidanceManager->addWaypoint(1.0, 1.49);
+  //Potential Starts
+  guidanceManager->addWaypoint(1.0, 0.54);
+  guidanceManager->addWaypoint(1.0, 1.49);
+
+  guidanceManager->addWaypoint(1.7, 0.42);
+  guidanceManager->addWaypoint(1.7, 1.3);
+  guidanceManager->addWaypoint(3.0, 1.3);
+  guidanceManager->addWaypoint(3.81, 1.3);
 
   guidanceManager->setActiveWaypoint(0);
 }
