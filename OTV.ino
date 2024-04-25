@@ -6,6 +6,8 @@ MotorController* motorController = new MotorController();
 SensorManager* sensorManager = new SensorManager();
 GuidanceManager* guidanceManager = new GuidanceManager();
 
+float speed = 0.5;
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
@@ -15,12 +17,12 @@ void setup() {
   //sensorManager->init();
 
   motorController->init();
-  motorController->setDriveSpeed(0.5);
+  motorController->setDriveSpeed(speed);
 
   Serial.println("Setting up guidance manager");
 
   guidanceManager->init();
-  guidanceManager->setPidConfig(0.5, 0.01, 0.15);
+  guidanceManager->setPidConfig(0.8, 0.01, 0.15);
   //guidanceManager->setPidConfig(0.2, 0.01, 0.15);
   //guidanceManager->setPidConfig(5.0, 0.0, 0.0);
 
@@ -75,7 +77,7 @@ void loop() {
     motorController->setDriveSpeed(0.0);
   } else {
     Serial.println("Valid position. Moving");
-    motorController->setDriveSpeed(1.0);
+    motorController->setDriveSpeed(speed);
   }
 
   float setpoint = guidanceManager->getUpdatedSteerBias();
