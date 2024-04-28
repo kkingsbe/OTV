@@ -10,6 +10,7 @@ void MotorController::init() {
     pinMode(M2, OUTPUT);
     pinMode(E1, OUTPUT);
     pinMode(E2, OUTPUT);
+    setDriveSpeed(0.0);
 }
  
 void MotorController::setDriveSpeed(float speed) {
@@ -48,7 +49,7 @@ void MotorController::commandMotors() {
     if(speedLeft < 0) speedLeft *= -1;
     if(speedRight < 0) speedRight *= -1;
  
-    Serial.println("Left: " + String(speedLeft) + " Right: " + String(speedRight));
+    //Serial.println("Left: " + String(speedLeft) + " Right: " + String(speedRight));
 
     analogWrite(E1, speedLeft);
     analogWrite(E2, speedRight);

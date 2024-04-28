@@ -6,9 +6,9 @@
 MotorController* motorController = new MotorController();
 SensorManager* sensorManager = new SensorManager();
 GuidanceManager* guidanceManager = new GuidanceManager();
-ArmController* armController = new ArmController(255.0);
+ArmController* armController = new ArmController();
 
-float speed = 0.8;
+float speed = 0.0;
 
 void setup() {
   // put your setup code here, to run once:
@@ -16,12 +16,12 @@ void setup() {
   Serial.println("Initializing...");
   delay(500);
 
-  /*
-  //sensorManager->init();
+  sensorManager->init();
 
   motorController->init();
   motorController->setDriveSpeed(speed);
 
+  /*
   Serial.println("Setting up guidance manager");
 
   guidanceManager->init();
@@ -47,6 +47,8 @@ void setup() {
   */
 
   armController->init();
+  motorController->tick();
+  armController->resetPosition();
 }
 
 long last_time = millis();
@@ -103,14 +105,15 @@ void loop() {
   if(guidanceManager->getDistanceError() < waypoint_distance_threshold) {
     guidanceManager->nextWaypoint();
   }
-  
-  //RangeData rd = sensorManager->getRange();
-  //Serial.println("Front Left: " + String(rd.front_l) + " | Front Right: " + String(rd.front_r) + " | Left: " + String(rd.left) + " | Right: " + String(rd.right));
 
   motorController->tick();
   delay(30);
   */
 
-  armController->spin();
+  //RangeData rd = sensorManager->getRange();
+  //Serial.println("Front Left: " + String(rd.front_l) + " | Front Right: " + String(rd.front_r) + " | Left: " + String(rd.left) + " | Right: " + String(rd.right));
+
+  motorController->tick();
   armController->tick();
 }
+ 

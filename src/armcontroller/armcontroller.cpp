@@ -1,9 +1,12 @@
 #include "armcontroller.h"
 
-ArmController::ArmController(float _speed): 
-    speed(_speed),
+ArmController::ArmController(): 
+    speed(ARM_SPEED),
     currentSpeed(0.0),
-    state(STOPPED) 
+    state(STOPPED),
+    resetState(NONE),
+    burstStartTime(0),
+    limitSwitchTime(0)
 {}
 
 void ArmController::init() {
@@ -12,6 +15,8 @@ void ArmController::init() {
     pinMode(ARM_DIR, OUTPUT);
     pinMode(LIMIT_SWITCH, OUTPUT);
     digitalWrite(LIMIT_SWITCH, HIGH);
+
+    digitalWrite(ARM_DIR, ArmDirection::FORWARD);
 }
  
 void ArmController::stop() {
@@ -25,24 +30,39 @@ void ArmController::updateSpeed(float _speed, bool forwards) {
     } else {
         currentSpeed = -_speed;
     }
-    state = MOVING;
 }
 
 void ArmController::tick() {
     if(limitSwitchPressed()) {
-        stop();
+        if(state == RESETTING) {
+            resetState = CENTERING;
+            limitSwitchTime = millis();
+        } else {
+            stop();
+        }
     } else {
+        if(millis() - burstStartTime < BURST_LENGTH) {
+            currentSpeed = BURST_SPEED;
+        } else {
+            currentSpeed = speed;
+        }
+
         this->commandMotors();
+    }
+
+    if(resetState == CENTERING && millis() - limitSwitchTime > RECENTER_DELAY) {
+        stop();
+        resetState = NONE;
     }
 }
 
 void ArmController::commandMotors() {
-    if(state == MOVING) {
-        digitalWrite(ARM_DIR, currentSpeed > 0 ? HIGH : LOW);
+    Serial.println("State: " + String(state) + " Speed: " + String(currentSpeed));
+    if(state == MOVING || state == RESETTING) {
+        digitalWrite(ARM_DIR, ArmDirection::FORWARD);
         analogWrite(ARM_PWM, abs(currentSpeed));
     } else {
-        digitalWrite(ARM_DIR, LOW);
-        analogWrite(ARM_PWM, 0);
+        digitalWrite(ARM_PWM, LOW);
     }
 }
 
@@ -51,7 +71,16 @@ bool ArmController::limitSwitchPressed() {
 }
 
 void ArmController::spin() {
+    burstStartTime = millis();
     updateSpeed(speed, true);
     state = MOVING;
+    tick();
+}
+
+void ArmController::resetPosition() {
+    burstStartTime = millis();
+    state = RESETTING;
+    resetState = APPROACHING_LIMIT_SWITCH;
+    updateSpeed(speed, true);
     tick();
 }

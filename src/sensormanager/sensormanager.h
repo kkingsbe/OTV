@@ -4,13 +4,13 @@
 #include <Arduino.h>
 
 //Configure sensor pins here
-#define FRONT_L_TRIG 7  //Working
+#define FRONT_L_TRIG A3  //Working
 #define FRONT_L_ECHO 9  //Working
-#define FRONT_R_TRIG 11 //Working
+#define FRONT_R_TRIG A1 //Working
 #define FRONT_R_ECHO 12 //Working
-#define LEFT_TRIG 6     //Working
+#define LEFT_TRIG A4     //Working
 #define LEFT_ECHO 8     //Working
-#define RIGHT_TRIG 10   //Working
+#define RIGHT_TRIG A2   //Working
 #define RIGHT_ECHO 13   //Working
 
 struct RangeData {

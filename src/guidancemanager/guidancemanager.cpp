@@ -14,7 +14,7 @@ GuidanceManager::GuidanceManager():
 }
 
 void GuidanceManager::init() {
-    Enes100.begin("MATTerials", MATERIAL, 247, 3,2);
+    Enes100.begin("MATTerials", MATERIAL, 247, 2,1);
     Serial.println("Vision system online");
 }
 
