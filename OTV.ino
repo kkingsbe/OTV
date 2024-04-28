@@ -1,10 +1,12 @@
 #include "src/motorcontroller/motorcontroller.h"
 #include "src/sensormanager/sensormanager.h"
 #include "src/guidancemanager/guidancemanager.h"
+#include "src/armcontroller/armcontroller.h"
 
 MotorController* motorController = new MotorController();
 SensorManager* sensorManager = new SensorManager();
 GuidanceManager* guidanceManager = new GuidanceManager();
+ArmController* armController = new ArmController(255.0);
 
 float speed = 0.8;
 
@@ -14,6 +16,7 @@ void setup() {
   Serial.println("Initializing...");
   delay(500);
 
+  /*
   //sensorManager->init();
 
   motorController->init();
@@ -40,6 +43,10 @@ void setup() {
   guidanceManager->addWaypoint(3.81, 1.3);
 
   guidanceManager->setActiveWaypoint(0);
+
+  */
+
+  armController->init();
 }
 
 long last_time = millis();
@@ -62,6 +69,7 @@ void determineStartPoint() {
 }
 
 void loop() {
+  /*
   guidanceManager->tick();
 
   //Determine starting waypoint
@@ -101,4 +109,8 @@ void loop() {
 
   motorController->tick();
   delay(30);
+  */
+
+  armController->spin();
+  armController->tick();
 }

@@ -11,6 +11,7 @@ void ArmController::init() {
     pinMode(ARM_PWM, OUTPUT);
     pinMode(ARM_DIR, OUTPUT);
     pinMode(LIMIT_SWITCH, OUTPUT);
+    digitalWrite(LIMIT_SWITCH, HIGH);
 }
  
 void ArmController::stop() {
@@ -46,5 +47,11 @@ void ArmController::commandMotors() {
 }
 
 bool ArmController::limitSwitchPressed() {
-    return digitalRead(LIMIT_SWITCH) == HIGH;
+    return digitalRead(LIMIT_SWITCH) == LOW;
+}
+
+void ArmController::spin() {
+    updateSpeed(speed, true);
+    state = MOVING;
+    tick();
 }

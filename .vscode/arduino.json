@@ -1,0 +1,4 @@
+{
+    "sketch": "OTV.ino",
+    "board": "arduino:avr:uno"
+}

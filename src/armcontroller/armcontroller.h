@@ -19,6 +19,7 @@ public:
     void updateSpeed(float speed, bool forwards);
     void init(); // Function to initialize the motor controller
     void tick();
+    void spin();
 private:
     float speed;
     float currentSpeed;
