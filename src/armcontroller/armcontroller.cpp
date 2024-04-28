@@ -33,18 +33,24 @@ void ArmController::updateSpeed(float _speed, bool forwards) {
 }
 
 void ArmController::tick() {
-    if(limitSwitchPressed()) {
+    bool isMoving = state == MOVING || (state == RESETTING && resetState == APPROACHING_LIMIT_SWITCH);
+    if(limitSwitchPressed() && isMoving) {
+        limitSwitchTime = millis();
+        
         if(state == RESETTING) {
             resetState = CENTERING;
-            limitSwitchTime = millis();
-        } else {
-            stop();
+        }
+
+        if(state == MOVING) {
+            state = COASTING;
         }
     } else {
-        if(millis() - burstStartTime < BURST_LENGTH) {
-            currentSpeed = BURST_SPEED;
-        } else {
-            currentSpeed = speed;
+        if(state == MOVING || state == RESETTING) {
+            if(millis() - burstStartTime < BURST_LENGTH) {
+                currentSpeed = BURST_SPEED;
+            } else {
+                currentSpeed = speed;
+            }
         }
 
         this->commandMotors();
@@ -54,10 +60,14 @@ void ArmController::tick() {
         stop();
         resetState = NONE;
     }
+
+    if(state == COASTING && millis() - limitSwitchTime > SPIN_DELAY) {
+        stop();
+    }
 }
 
 void ArmController::commandMotors() {
-    Serial.println("State: " + String(state) + " Speed: " + String(currentSpeed));
+    //Serial.println("State: " + String(state) + " Speed: " + String(currentSpeed));
     if(state == MOVING || state == RESETTING) {
         digitalWrite(ARM_DIR, ArmDirection::FORWARD);
         analogWrite(ARM_PWM, abs(currentSpeed));

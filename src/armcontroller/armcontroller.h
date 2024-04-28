@@ -7,14 +7,16 @@
 #define ARM_DIR 10
 #define LIMIT_SWITCH A0
 #define BURST_SPEED 255.0
-#define BURST_LENGTH 50 //How many ms to burst the motor for to get it moving
+#define BURST_LENGTH 50     //How many ms to burst the motor for to get it moving
 #define ARM_SPEED 100.0
-#define RECENTER_DELAY 800 //How many ms to wait before stopping the arm when recentering (after pressing limit switch)
+#define RECENTER_DELAY 800  //How many ms to wait before stopping the arm when recentering (after pressing limit switch)
+#define SPIN_DELAY 500      //How many ms to wait before stopping the arm when bringing in the block
 
 enum ArmState {
     MOVING,
     RESETTING,
-    STOPPED
+    STOPPED,
+    COASTING
 };
 
 enum ResetState {

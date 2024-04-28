@@ -13,6 +13,7 @@ void MotorController::init() {
     setDriveSpeed(0.0);
 }
  
+//Speed is between 0 and 1
 void MotorController::setDriveSpeed(float speed) {
     // Set the drive speed
     motors.driveSpeed = speed;
@@ -23,7 +24,6 @@ void MotorController::setDriveSpeed(float speed) {
  * @var steerAngle The steer angle to set. Ranges from -1 (full left) to 1 (full right).
 */
 void MotorController::setSteerBias(float steerAngle) {
-    Serial.println("Steer angle: " + String(steerAngle));
     if(steerAngle <= 0) { //Turn left
         this->motors.left = (2.0 * steerAngle) + 1.0;
         this->motors.right = 1.0;

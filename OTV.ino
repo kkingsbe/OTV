@@ -8,7 +8,9 @@ SensorManager* sensorManager = new SensorManager();
 GuidanceManager* guidanceManager = new GuidanceManager();
 ArmController* armController = new ArmController();
 
-float speed = 0.0;
+float speed = 0.7;
+float columnOneX = 1.25;
+float columnTwoX = 2.0;
 
 void setup() {
   // put your setup code here, to run once:
@@ -17,36 +19,42 @@ void setup() {
   delay(500);
 
   sensorManager->init();
-
   motorController->init();
   motorController->setDriveSpeed(speed);
 
-  /*
   Serial.println("Setting up guidance manager");
 
   guidanceManager->init();
   //Becomes unstable at kp=0.8
   guidanceManager->setPidConfig(0.8, 0.01, 0.2);
-  //guidanceManager->setPidConfig(0.2, 0.01, 0.15);
-  //guidanceManager->setPidConfig(5.0, 0.0, 0.0);
-
-  //guidanceManager->addWaypoint(0.52, 0.54);
-  //guidanceManager->addWaypoint(0.53, 1.49);
 
   //Potential Starts
-  guidanceManager->addWaypoint(1.0, 0.54);
-  guidanceManager->addWaypoint(1.0, 1.49);
+  guidanceManager->addWaypoint(0.42, 0.54, 0);
+  guidanceManager->addWaypoint(0.42, 1.49, 1);
 
-  guidanceManager->addWaypoint(1.7, 0.42);
-  guidanceManager->addWaypoint(1.7, 1.3);
-  guidanceManager->addWaypoint(3.0, 1.3);
-  guidanceManager->addWaypoint(3.81, 1.3);
+  //Navigation waypoints
+  guidanceManager->addWaypoint(1.25, 0.5, 2, true, 0, 0);
+  guidanceManager->addWaypoint(1.25, 1.0, 3, true, 1, 0);
+  guidanceManager->addWaypoint(1.25, 1.5, 4, true, 2, 0);
+
+  guidanceManager->addWaypoint(2.0, 1.5, 5, true, 0, 1);
+  guidanceManager->addWaypoint(2.0, 1.0, 6, true, 1, 1);
+  guidanceManager->addWaypoint(2.0, 0.5, 7, true, 2, 1);
+
+  guidanceManager->addWaypoint(3.0, 1.5, 8);  //Line up with limbo
+  guidanceManager->addWaypoint(3.5, 1.5, 9);  //Pass limbo
+
+  /*
+  guidanceManager->addWaypoint(0.42, 0.3, POTENTIAL_OBSTACLE_COL1); //Line up with gap between obstacles and wall
+  guidanceManager->addWaypoint(3.0, 0.3, POTENTIAL_OBSTACLE);  //Pass both columns
+  guidanceManager->addWaypoint(3.0, 1.5, POTENTIAL_OBSTACLE);  //Line up with limbo
+  guidanceManager->addWaypoint(3.5, 1.5, POTENTIAL_OBSTACLE);  //Pass limbo
+  */
 
   guidanceManager->setActiveWaypoint(0);
 
-  */
-
   armController->init();
+
   motorController->tick();
   armController->resetPosition();
 }
@@ -64,16 +72,14 @@ void determineStartPoint() {
   Waypoint* waypoint1 = guidanceManager->getWaypoint(1);
   
   //If vehicle did not start at waypoint 0
-  Serial.println("Distance to waypoint 1: " + String(guidanceManager->getDistanceError()));
   if(guidanceManager->getDistanceError() > waypoint_distance_threshold) {
-    guidanceManager->setActiveWaypoint(1);
+    //Swap the two waypoints
+    guidanceManager->getWaypoint(0)->index = 1;
+    guidanceManager->getWaypoint(1)->index = 0;
   }
 }
 
 void loop() {
-  /*
-  guidanceManager->tick();
-
   //Determine starting waypoint
   if(!has_init) {
     VehiclePosition* pos = guidanceManager->getPosition();
@@ -90,30 +96,42 @@ void loop() {
   VehiclePosition* pos = guidanceManager->getPosition();
 
   if(!pos->valid) {
-    Serial.println("Invalid position. Waiting");
+    //Serial.println("Invalid position. Waiting");
     motorController->setDriveSpeed(0.0);
   } else {
-    Serial.println("Valid position. Moving");
+    //Serial.println("Valid position. Moving");
     motorController->setDriveSpeed(speed);
   }
 
   float setpoint = guidanceManager->getUpdatedSteerBias();
   motorController->setSteerBias(setpoint);
   
-  float distance_error = guidanceManager->getDistanceError();
+  RangeData rd = sensorManager->getRange();
 
+  float distance_error = guidanceManager->getDistanceError();
   if(guidanceManager->getDistanceError() < waypoint_distance_threshold) {
-    guidanceManager->nextWaypoint();
+    if(guidanceManager->isActiveWaypointGrid()) {
+      //Determine if obstacle exists
+      if(rd.front_l < 20 || rd.front_r < 20) {
+        guidanceManager->nextRow();
+      } else {
+        guidanceManager->nextCol(); //No obstacle, move to next column
+      }
+    } else {
+      bool nextWaypointRes = guidanceManager->nextWaypoint();
+
+      if (!nextWaypointRes) {
+        motorController->setDriveSpeed(0.0); //Stop driving
+      }
+    }
   }
 
-  motorController->tick();
-  delay(30);
-  */
-
-  //RangeData rd = sensorManager->getRange();
-  //Serial.println("Front Left: " + String(rd.front_l) + " | Front Right: " + String(rd.front_r) + " | Left: " + String(rd.left) + " | Right: " + String(rd.right));
+  guidanceManager->tick();
+  Serial.println("Front Left: " + String(rd.front_l) + " | Front Right: " + String(rd.front_r) + " | Left: " + String(rd.left) + " | Right: " + String(rd.right));
 
   motorController->tick();
   armController->tick();
+
+  delay(30);
 }
  
