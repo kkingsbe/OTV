@@ -21,8 +21,59 @@ void GuidanceManager::init() {
     Serial.println("Vision system online");
 }
 
-void GuidanceManager::tick() {
+GuidanceInfo GuidanceManager::tick(RangeData* rd) {
+    GuidanceInfo info;
+    info.driveSpeed = 0.5;
+
+    bool moveToNext = false;
+    
+    //If at waypoint
+    if(getDistanceError() < WAYPOINT_DISTANCE_THRESHOLD) {
+        Enes100.println("Reached waypoint");
+        //If the waypoint has an associated target heading
+        if(getWaypoint(active_waypoint)->hasHeading) {
+            float error = normalizeAngle(getWaypoint(active_waypoint)->heading - vehicle_position->theta);
+            Enes100.println("Waypoint has target heading. Turning.");
+            Enes100.println("Heading: " + String(getWaypoint(active_waypoint)->heading) + " Vehicle Heading: " + String(vehicle_position->theta) + " Diff: " + String(error));
+            if(abs(error) > WAYPOINT_HEADING_THRESHOLD) {
+                info.steerBias = error < 0 ? -1.0 : 1.0; //Might need to be flipped lol
+                info.driveSpeed = 0.5;
+            } else {
+                //Determine if obstacle exists
+                if(isActiveWaypointGrid()) {
+                    if(rd->front_l < 20 || rd->front_r < 20) {
+                        Enes100.println("Obstacle detected. Moving to next row");
+                        nextRow();
+                    } else {
+                        Enes100.println("No obstacle detected. Moving to next column");
+                        nextCol(); //No obstacle, move to next column
+                    }
+                    Enes100.println("Active waypoint: " + String(active_waypoint));
+                } else {
+                    moveToNext = true;
+                }
+            }
+        } else { //No target heading for waypoint
+            moveToNext = true;
+        }
+    } else {
+        info.steerBias = getUpdatedSteerBias();
+    }
+
+    if(moveToNext) {
+        Enes100.println("Proceeding to next waypoint");
+
+        bool nextWaypointRes = nextWaypoint();
+
+        if (!nextWaypointRes) {
+            //Stop driving
+            info.driveSpeed = 0.0;
+        }
+    }
+
     updateLocation();
+
+    return info;
 }
 
 void GuidanceManager::setPidConfig(float kp, float ki, float kd) {
@@ -31,13 +82,15 @@ void GuidanceManager::setPidConfig(float kp, float ki, float kd) {
     pid_config->kd = kd;
 }
 
-void GuidanceManager::addWaypoint(float x, float y, int index, bool isGrid = false, int row = 0, int col = 0) {
+void GuidanceManager::addWaypoint(float x, float y, int index, bool useHeading = false, float heading = 0.0, bool isGrid = false, int row = 0, int col = 0) {
     waypoints[total_waypoints].x = x;
     waypoints[total_waypoints].y = y;
     waypoints[total_waypoints].isGrid = isGrid;
     waypoints[total_waypoints].grid.row = row;
     waypoints[total_waypoints].grid.col = col;
     waypoints[total_waypoints].index = index;
+    waypoints[total_waypoints].heading = heading;
+    waypoints[total_waypoints].hasHeading = useHeading;
 
     total_waypoints++;
 }
@@ -203,4 +256,10 @@ void GuidanceManager::nextCol() {
 
 bool GuidanceManager::isActiveWaypointGrid() {
     return getWaypoint(active_waypoint)->isGrid;
+}
+
+float GuidanceManager::normalizeAngle(float angle) {
+    while (angle > PI) angle -= 2 * PI;
+    while (angle < -PI) angle += 2 * PI;
+    return angle;
 }

@@ -6,6 +6,8 @@
 #define MAX_WAYPOINTS 20
 #define WIFI_RX 3
 #define WIFI_TX 2
+#define WAYPOINT_DISTANCE_THRESHOLD 0.25 //m
+#define WAYPOINT_HEADING_THRESHOLD 0.5 //rad
 
 struct WaypointGrid {
     int row;
@@ -18,6 +20,8 @@ struct Waypoint {
     bool isGrid;
     WaypointGrid grid;
     int index;
+    float heading;
+    bool hasHeading;
 };
 
 struct PIDConfig {
@@ -33,17 +37,23 @@ struct VehiclePosition {
     bool valid;
 };
 
+struct GuidanceInfo {
+    float distanceError;
+    float headingError;
+    float steerBias;
+    float driveSpeed;
+};
+
 class GuidanceManager {
 public:
     GuidanceManager(); // Constructor
-    void addWaypoint(float x, float y, int index, bool isGrid = false, int row = 0, int col = 0);
+    void addWaypoint(float x, float y, int index, bool useHeading = false, float heading = 0.0, bool isGrid = false, int row = 0, int col = 0);
     void setActiveWaypoint(int index);
     bool nextWaypoint(); //True if there is a next waypoint, false if there is not
-    float getUpdatedSteerBias();
     void setPidConfig(float kp, float ki, float kd);
     float getHeadingError();
     float getDistanceError();
-    void tick();
+    GuidanceInfo tick(RangeData* rd);
     void init();
     float getDistanceToWaypoint(int index);
     VehiclePosition* getPosition();
@@ -59,6 +69,8 @@ private:
     long last_time;
     float prev_err;
     void updateLocation();
+    float getUpdatedSteerBias();
+    float normalizeAngle(float angle);
     PIDConfig* pid_config;
     VehiclePosition* vehicle_position;
 };
