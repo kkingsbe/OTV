@@ -32,7 +32,13 @@ GuidanceInfo GuidanceManager::tick(RangeData* rd) {
         Enes100.println("Reached waypoint");
         //If the waypoint has an associated target heading
         if(getWaypoint(active_waypoint)->hasHeading) {
-            float error = normalizeAngle(getWaypoint(active_waypoint)->heading - vehicle_position->theta);
+            float diff = getWaypoint(active_waypoint)->heading - vehicle_position->theta;
+            float normalized_diff = fmod(diff + PI, 2 * PI) - PI;
+            float error = abs(normalized_diff);
+            if(normalized_diff > 0) {
+                error *= -1;
+            }
+        
             Enes100.println("Waypoint has target heading. Turning.");
             Enes100.println("Heading: " + String(getWaypoint(active_waypoint)->heading) + " Vehicle Heading: " + String(vehicle_position->theta) + " Diff: " + String(error));
             if(abs(error) > WAYPOINT_HEADING_THRESHOLD) {
@@ -41,7 +47,7 @@ GuidanceInfo GuidanceManager::tick(RangeData* rd) {
             } else {
                 //Determine if obstacle exists
                 if(isActiveWaypointGrid()) {
-                    if(rd->front_l < 20 || rd->front_r < 20) {
+                    if(rd->front_r < 20) {
                         Enes100.println("Obstacle detected. Moving to next row");
                         nextRow();
                     } else {
@@ -72,6 +78,8 @@ GuidanceInfo GuidanceManager::tick(RangeData* rd) {
     }
 
     updateLocation();
+
+    Enes100.println("Steer Bias: " + String(info.steerBias));
 
     return info;
 }
@@ -236,10 +244,12 @@ void GuidanceManager::nextRow() {
 
     for(int i = 0; i < total_waypoints; i++) {
         if(waypoints[i].grid.row == currentRow + 1 && waypoints[i].grid.col == currentCol) {
-            active_waypoint = i;
+            active_waypoint = waypoints[i].index;
             return;
         }
     }
+    
+    Enes100.println("ERROR: No waypoint for the next row was found");
 }
 
 void GuidanceManager::nextCol() {
@@ -248,7 +258,7 @@ void GuidanceManager::nextCol() {
 
     for(int i = 0; i < total_waypoints; i++) {
         if(waypoints[i].grid.row == currentRow && waypoints[i].grid.col == currentCol + 1) {
-            active_waypoint = i;
+            active_waypoint = waypoints[i].index;
             return;
         }
     }
