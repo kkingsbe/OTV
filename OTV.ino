@@ -34,16 +34,21 @@ void setup() {
   //guidanceManager->addWaypoint(0.42, 1.49, 1);
 
   //Navigation waypoints
-  guidanceManager->addWaypoint(1.25, 0.5, 2, true, 0, true, 0, 0);
-  guidanceManager->addWaypoint(1.25, 1.0, 3, true, 0, true, 1, 0);
-  guidanceManager->addWaypoint(1.25, 1.5, 4, true, 0, true, 2, 0);
+  guidanceManager->addWaypoint(1.3, 0.4, 2, false, 0, true, 0, 0);
+  guidanceManager->addWaypoint(1.3, 1.1, 3, false, 0, true, 1, 0);
+  guidanceManager->addWaypoint(1.3, 1.7, 4, false, 0, true, 2, 0);
 
-  guidanceManager->addWaypoint(2.2, 0.5, 7, true, 0, true, 0, 1);
-  guidanceManager->addWaypoint(2.2, 1.0, 6, true, 0, true, 1, 1);
-  guidanceManager->addWaypoint(2.2, 1.5, 5, true, 0, true, 2, 1);
+  guidanceManager->addWaypoint(2.1, 0.4, 7, false, 0, true, 0, 1);
+  guidanceManager->addWaypoint(2.1, 1.2, 6, false, 0, true, 1, 1);
+  guidanceManager->addWaypoint(2.1, 1.7, 5, false, 0, true, 2, 1);
 
-  guidanceManager->addWaypoint(3.0, 1.5, 8);  //Line up with limbo
-  guidanceManager->addWaypoint(3.5, 1.5, 9);  //Pass limbo
+  //Clear last column
+  guidanceManager->addWaypoint(3.0, 0.4, 8);
+  guidanceManager->addWaypoint(3.0, 1.2, 9);
+  guidanceManager->addWaypoint(3.0, 1.7, 10);
+
+  guidanceManager->addWaypoint(3.0, 1.5, 11);  //Line up with limbo
+  guidanceManager->addWaypoint(3.5, 1.5, 12);  //Pass limbo
 
   guidanceManager->setActiveWaypoint(2);
   //guidanceManager->setActiveWaypoint(0);
@@ -112,3 +117,5 @@ void loop() {
   delay(30);
 }
  
+  
+  

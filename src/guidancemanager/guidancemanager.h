@@ -7,7 +7,9 @@
 #define WIFI_RX 3
 #define WIFI_TX 2
 #define WAYPOINT_DISTANCE_THRESHOLD 0.25 //m
-#define WAYPOINT_HEADING_THRESHOLD 0.5 //rad
+#define WAYPOINT_HEADING_THRESHOLD 0.3 //rad
+#define OBSTACLE_DISTANCE_THRESHOLD 25 //cm
+#define PAUSE_TIME 1000 //ms
 
 struct WaypointGrid {
     int row;
@@ -59,8 +61,8 @@ public:
     VehiclePosition* getPosition();
     Waypoint* getWaypoint(int index);
     bool isActiveWaypointGrid();
-    void nextRow();
-    void nextCol();
+    bool nextRow();
+    bool nextCol();
 private:
     Waypoint waypoints[MAX_WAYPOINTS];
     int total_waypoints;
@@ -73,6 +75,11 @@ private:
     float normalizeAngle(float angle);
     PIDConfig* pid_config;
     VehiclePosition* vehicle_position;
+    long pauseStartTime;
+    bool isPaused;
+    bool isHeadedUp; //True if checking increasing rows, false otherwise
+    int maxWaypointIndex;
+    void clearColumn();
 };
 
 #endif // SENSOR_MANAGER_H
