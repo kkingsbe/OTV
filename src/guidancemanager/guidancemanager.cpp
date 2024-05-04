@@ -37,7 +37,10 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd)
     // If at waypoint
     if (getDistanceError() < WAYPOINT_DISTANCE_THRESHOLD)
     {
-        Enes100.println("Reached waypoint");
+        if(!isPaused) {
+            //Enes100.println("Reached scan waypoint");
+        }
+        
         // If the waypoint has an associated target heading
         if (getWaypoint(active_waypoint)->isGrid)
         {
@@ -49,24 +52,31 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd)
             {
                 error *= -1;
             }
+            float sign = normalized_diff / abs(normalized_diff);
 
-            Enes100.println("Waypoint has target heading. Turning.");
-            Enes100.println("Heading: " + String(targetHeading) + " Vehicle Heading: " + String(vehicle_position->theta) + " Diff: " + String(error));
+            //Enes100.println("Waypoint has target heading. Turning.");
             if (abs(error) > WAYPOINT_HEADING_THRESHOLD)
             {
+                // Enes100.println("Heading: " + String(targetHeading) + " Vehicle Heading: " + String(vehicle_position->theta) + " Diff: " + String(error));
+            
                 info.steerBias = error < 0 ? -1.0 : 1.0; // Might need to be flipped lol
-                // info.driveSpeed = 0.5;
-                info.driveSpeed = 0.35;
+                //info.driveSpeed = 0.5;
+                info.driveSpeed = max(0.5 + (2.0 * abs(error)), 0.4);
             }
             else //Pointing in correct direction
             {
+                // Enes100.println("Facing correct direction");
+
                 if(!isPaused) {
                     isPaused = true;
                     pauseStartTime = millis();
                 }
 
+                //Enes100.println("Paused: " + String(isPaused) + " Time: " + String(millis() - pauseStartTime) + "ms");
+
                 if (isPaused && millis() - pauseStartTime > PAUSE_TIME)
                 {
+                    Enes100.println("Scanning");
                     isPaused = false;
                     // Determine if obstacle exists
                     if (isActiveWaypointGrid())
@@ -184,12 +194,14 @@ void GuidanceManager::updateLocation()
     vehicle_position->y = Enes100.getY();
     vehicle_position->theta = Enes100.getTheta();
 
-    // Account for vehicle offset
-    vehicle_position->x += aruco_offset_y * cos(vehicle_position->theta);
-    vehicle_position->y += aruco_offset_y * sin(vehicle_position->theta);
+    //Serial.print("Adding " + String(aruco_offset_x * cos(vehicle_position->theta) - aruco_offset_y * sin(vehicle_position->theta)) + " to x ");
+    //Serial.println("and " + String(aruco_offset_x * sin(vehicle_position->theta) + aruco_offset_y * cos(vehicle_position->theta)) + " to y");
 
-    //vehicle_position->x += aruco_offset_x * cos(vehicle_position->theta + PI / 2.0);
-    //vehicle_position->y += aruco_offset_x * sin(vehicle_position->theta + PI / 2.0);
+    // Account for vehicle offset
+    vehicle_position->x += aruco_offset_x * cos(vehicle_position->theta) - aruco_offset_y * sin(vehicle_position->theta);
+    vehicle_position->y += aruco_offset_x * sin(vehicle_position->theta) + aruco_offset_y * cos(vehicle_position->theta);
+
+    //Serial.println("X: " + String(vehicle_position->x) + " Y: " + String(vehicle_position->y) + " Theta: " + String(vehicle_position->theta));
 
     // if(!Enes100.isVisible()) vehicle_position->valid = false;
     // else vehicle_position->valid = true;

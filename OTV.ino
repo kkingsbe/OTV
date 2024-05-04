@@ -34,18 +34,18 @@ void setup() {
   //guidanceManager->addWaypoint(0.42, 1.49, 1);
 
   //Navigation waypoints
-  guidanceManager->addWaypoint(1.3, 0.4, 2, false, 0, true, 0, 0);
-  guidanceManager->addWaypoint(1.3, 1.1, 3, false, 0, true, 1, 0);
-  guidanceManager->addWaypoint(1.3, 1.7, 4, false, 0, true, 2, 0);
+  guidanceManager->addWaypoint(1.1, 0.6, 2, false, 0, true, 0, 0);
+  guidanceManager->addWaypoint(1.1, 1.1, 3, false, 0, true, 1, 0);
+  guidanceManager->addWaypoint(1.1, 1.4, 4, false, 0, true, 2, 0);
 
-  guidanceManager->addWaypoint(2.1, 0.4, 7, false, 0, true, 0, 1);
-  guidanceManager->addWaypoint(2.1, 1.2, 6, false, 0, true, 1, 1);
-  guidanceManager->addWaypoint(2.1, 1.7, 5, false, 0, true, 2, 1);
+  guidanceManager->addWaypoint(2.1, 0.6, 7, false, 0, true, 0, 1);
+  guidanceManager->addWaypoint(2.1, 1.1, 6, false, 0, true, 1, 1);
+  guidanceManager->addWaypoint(2.1, 1.4, 5, false, 0, true, 2, 1);
 
   //Clear last column
-  guidanceManager->addWaypoint(3.0, 0.4, 8);
-  guidanceManager->addWaypoint(3.0, 1.2, 9);
-  guidanceManager->addWaypoint(3.0, 1.7, 10);
+  guidanceManager->addWaypoint(3.0, 0.6, 8);
+  guidanceManager->addWaypoint(3.0, 1.0, 9);
+  guidanceManager->addWaypoint(3.0, 1.4, 10);
 
   guidanceManager->addWaypoint(3.0, 1.5, 11);  //Line up with limbo
   guidanceManager->addWaypoint(3.5, 1.5, 12);  //Pass limbo
@@ -109,7 +109,7 @@ void loop() {
   motorController->setDriveSpeed(gi.driveSpeed);
   motorController->setSteerBias(gi.steerBias);
   
-  Serial.println("Front Left: " + String(rd.front_l) + " | Front Right: " + String(rd.front_r) + " | Left: " + String(rd.left) + " | Right: " + String(rd.right));
+  //Serial.println("Front Left: " + String(rd.front_l) + " | Front Right: " + String(rd.front_r) + " | Left: " + String(rd.left) + " | Right: " + String(rd.right));
 
   motorController->tick();
   armController->tick();
