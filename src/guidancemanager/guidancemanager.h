@@ -48,10 +48,12 @@ struct GuidanceInfo {
 
 enum GuidanceState {
     DETERMINING_START_POINT,
+    NAVIGATING_TO_MISSION,
     NAVIGATING_TO_WAYPOINT,
     TURNING_TO_HEADING,
     PAUSED,
     SCANNING_POTENTIAL_OBSTACLE,
+    CIRCLING_BLOCK,
     FINISHED
 };
 
@@ -63,6 +65,7 @@ public:
     bool nextWaypoint(); //True if there is a next waypoint, false if there is not
     void setPidConfig(float kp, float ki, float kd);
     void setZeroPointPidConfig(float kp, float ki, float kd);
+    void setCirclePidConfig(float kp, float ki, float kd);
     float getHeadingError();
     float getDistanceError();
     GuidanceInfo tick(RangeData* rd);
@@ -79,14 +82,17 @@ private:
     int active_waypoint;
     float integral;
     float zero_point_integral;
+    float circle_integral;
     long last_time;
     float prev_err;
     float prev_zero_point_err;
+    float prev_circle_err;
     void updateLocation();
     float getUpdatedSteerBias();
     float normalizeAngle(float angle);
     PIDConfig* pid_config;
     PIDConfig* zero_point_pid_config;
+    PIDConfig* circle_pid_config;
     VehiclePosition* vehicle_position;
     long pauseStartTime;
     bool isHeadedUp; //True if checking increasing rows, false otherwise

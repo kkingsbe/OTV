@@ -5,10 +5,12 @@
 GuidanceManager::GuidanceManager() : total_waypoints(0),
                                      integral(0),
                                      zero_point_integral(0),
+                                     circle_integral(0),
                                      active_waypoint(0),
                                      last_time(millis()),
                                      prev_err(0),
                                      prev_zero_point_err(0),
+                                     prev_circle_err(0),
                                      pid_config(new PIDConfig{0.0, 0.0, 0.0}),
                                      vehicle_position(new VehiclePosition{-1.0, -1.0, 0.0, false}),
                                      pauseStartTime(millis()),
@@ -35,39 +37,53 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
 
     updateLocation();
 
-    /*
-    switch(guidanceState) {
-        case DETERMINING_START_POINT:
-            Enes100.println("DETERMINING_START_POINT");
-            break;
-        case NAVIGATING_TO_WAYPOINT:
-            Enes100.println("NAVIGATING_TO_WAYPOINT");
-            break;
-        case TURNING_TO_HEADING:
-            Enes100.println("TURNING_TO_HEADING");
-            break;
-        case PAUSED:
-            Enes100.println("PAUSED");
-            break;
-        case SCANNING_POTENTIAL_OBSTACLE:
-            Enes100.println("SCANNING_POTENTIAL_OBSTACLE");
-            break;
-        case FINISHED:
-            Enes100.println("FINISHED");
-            break;
-    }
-    */
-
     switch(guidanceState) {
         case DETERMINING_START_POINT:
         {
             //Only determine the start point if the initial waypoint is 0, otherwise dont (to allow for starting after the initial waypoints)
             if(active_waypoint == 0) {
                 determineStartPoint();
-                guidanceState = NAVIGATING_TO_WAYPOINT;
+                guidanceState = NAVIGATING_TO_MISSION;
             } else {
                 guidanceState = NAVIGATING_TO_WAYPOINT;
             }
+
+            break;
+        }
+        case NAVIGATING_TO_MISSION:
+        {
+            info.driveSpeed = 0.5;
+            info.steerBias = getUpdatedSteerBias(); //Gets updated steer bias
+            Enes100.println("Steer bias: " + String(info.steerBias));
+            if(getDistanceError() < WAYPOINT_DISTANCE_THRESHOLD) {
+                if(getWaypoint(active_waypoint)->isGrid) {
+                    guidanceState = CIRCLING_BLOCK;
+                } else {
+                    nextWaypoint();
+                }
+            }
+            break;
+        }
+        case CIRCLING_BLOCK:
+        {
+            float targetRadius = 0.2; //Radius of the circle around the block
+            float distanceToBlock = getDistanceError();
+            float angleToBlock = getHeadingError();
+            float angleToCircle = PI/2.0 - angleToBlock; //Default setpoint
+
+            float error = targetRadius - distanceToBlock;
+            float dt = (millis() - last_time) / 1000.0;
+            circle_integral += error * dt;
+            float derivative = (error - prev_circle_err) / dt;
+            prev_circle_err = error;
+
+            float p_term = circle_pid_config->kp * error;
+            float i_term = circle_pid_config->ki * circle_integral;
+            float d_term = circle_pid_config->kd * derivative;
+
+            float setpoint = constrain(p_term + i_term + d_term, -1.0, 1.0);
+            info.steerBias = setpoint;
+            info.driveSpeed = 0.5;
 
             break;
         }
@@ -228,6 +244,13 @@ void GuidanceManager::setZeroPointPidConfig(float kp, float ki, float kd)
     zero_point_pid_config->kp = kp;
     zero_point_pid_config->ki = ki;
     zero_point_pid_config->kd = kd;
+}
+
+void GuidanceManager::setCirclePidConfig(float kp, float ki, float kd)
+{
+    circle_pid_config->kp = kp;
+    circle_pid_config->ki = ki;
+    circle_pid_config->kd = kd;
 }
 
 void GuidanceManager::addWaypoint(float x, float y, int index, bool useHeading = false, float heading = 0.0, bool isGrid = false, int row = 0, int col = 0)
