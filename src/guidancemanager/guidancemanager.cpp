@@ -66,12 +66,13 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
         }
         case CIRCLING_BLOCK:
         {
-            float targetRadius = 0.2; //Radius of the circle around the block
+            float targetRadius = 0.15; //Radius of the circle around the block
             float distanceToBlock = getDistanceError();
             float angleToBlock = getHeadingError();
             float angleToCircle = PI/2.0 - angleToBlock; //Default setpoint
 
             float error = targetRadius - distanceToBlock;
+            
             float dt = (millis() - last_time) / 1000.0;
             circle_integral += error * dt;
             float derivative = (error - prev_circle_err) / dt;

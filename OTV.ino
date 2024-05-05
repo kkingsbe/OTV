@@ -29,11 +29,12 @@ void setup() {
   //guidanceManager->setPidConfig(0.8, 0.01, 0.2);
   guidanceManager->setPidConfig(0.8, 0.01, 0.4);
   guidanceManager->setZeroPointPidConfig(0.15, 0.1, 0.05);
-  guidanceManager->setCirclePidConfig(0.3, 0, 0);
+  guidanceManager->setCirclePidConfig(2.0, 0, 0);
 
   //Potential Starts
-  guidanceManager->addWaypoint(0.42, 0.54, 0);
-  guidanceManager->addWaypoint(0.42, 1.49, 1);
+  guidanceManager->addWaypoint(0.3, 0.54, 0);
+  guidanceManager->addWaypoint(0.3, 1.49, 1);
+  //guidanceManager->addWaypoint(0.3, 1.0, 0);
 
   //Navigation waypoints
   guidanceManager->addWaypoint(1.1, 0.6, 2, false, 0, true, 0, 0);
