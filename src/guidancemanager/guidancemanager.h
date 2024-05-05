@@ -46,6 +46,15 @@ struct GuidanceInfo {
     float driveSpeed;
 };
 
+enum GuidanceState {
+    DETERMINING_START_POINT,
+    NAVIGATING_TO_WAYPOINT,
+    TURNING_TO_HEADING,
+    PAUSED,
+    SCANNING_POTENTIAL_OBSTACLE,
+    FINISHED
+};
+
 class GuidanceManager {
 public:
     GuidanceManager(); // Constructor
@@ -76,10 +85,12 @@ private:
     PIDConfig* pid_config;
     VehiclePosition* vehicle_position;
     long pauseStartTime;
-    bool isPaused;
     bool isHeadedUp; //True if checking increasing rows, false otherwise
     int maxWaypointIndex;
     void clearColumn();
+    GuidanceState guidanceState;
+    void determineStartPoint();
+    void navigateToWaypoint(GuidanceInfo* gi);
 };
 
 #endif // SENSOR_MANAGER_H

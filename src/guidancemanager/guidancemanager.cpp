@@ -10,9 +10,10 @@ GuidanceManager::GuidanceManager() : total_waypoints(0),
                                      pid_config(new PIDConfig{0.0, 0.0, 0.0}),
                                      vehicle_position(new VehiclePosition{-1.0, -1.0, 0.0, false}),
                                      pauseStartTime(millis()),
-                                     isPaused(false),
                                      isHeadedUp(true),
-                                     maxWaypointIndex(0)
+                                     maxWaypointIndex(0),
+                                     guidanceState(DETERMINING_START_POINT)
+                                     //guidanceState(PAUSED)
 {
 }
 
@@ -25,126 +26,160 @@ void GuidanceManager::init()
     Serial.println("Vision system online");
 }
 
-GuidanceInfo GuidanceManager::tick(RangeData *rd)
-{
+GuidanceInfo GuidanceManager::tick(RangeData *rd) {
     GuidanceInfo info;
-    info.driveSpeed = 0.5;
+    info.driveSpeed = 0.0;
+    info.steerBias = 0.0;
 
-    bool moveToNext = false;
+    updateLocation();
 
-    //Enes100.println("Distance to obstacle: " + String(rd->front_r));
+    /*
+    switch(guidanceState) {
+        case DETERMINING_START_POINT:
+            Enes100.println("DETERMINING_START_POINT");
+            break;
+        case NAVIGATING_TO_WAYPOINT:
+            Enes100.println("NAVIGATING_TO_WAYPOINT");
+            break;
+        case TURNING_TO_HEADING:
+            Enes100.println("TURNING_TO_HEADING");
+            break;
+        case PAUSED:
+            Enes100.println("PAUSED");
+            break;
+        case SCANNING_POTENTIAL_OBSTACLE:
+            Enes100.println("SCANNING_POTENTIAL_OBSTACLE");
+            break;
+        case FINISHED:
+            Enes100.println("FINISHED");
+            break;
+    }
+    */
 
-    // If at waypoint
-    if (getDistanceError() < WAYPOINT_DISTANCE_THRESHOLD)
-    {
-        if(!isPaused) {
-            //Enes100.println("Reached scan waypoint");
-        }
-        
-        // If the waypoint has an associated target heading
-        if (getWaypoint(active_waypoint)->isGrid)
+    switch(guidanceState) {
+        case DETERMINING_START_POINT:
         {
+            //Only determine the start point if the initial waypoint is 0, otherwise dont (to allow for starting after the initial waypoints)
+            if(active_waypoint == 0) {
+                determineStartPoint();
+                guidanceState = NAVIGATING_TO_WAYPOINT;
+            } else {
+                guidanceState = NAVIGATING_TO_WAYPOINT;
+            }
+
+            break;
+        }
+        case NAVIGATING_TO_WAYPOINT:
+        {
+            info.driveSpeed = 0.5;
+            info.steerBias = getUpdatedSteerBias(); //Gets updated steer bias
+            Enes100.println("Steer bias: " + String(info.steerBias));
+            if(getDistanceError() < WAYPOINT_DISTANCE_THRESHOLD) {
+                if(getWaypoint(active_waypoint)->isGrid) {
+                    guidanceState = TURNING_TO_HEADING;
+                } else {
+                    nextWaypoint();
+                }
+            }
+            break;
+        }
+        case TURNING_TO_HEADING:
+        {
+            if(getDistanceError() > WAYPOINT_DISTANCE_THRESHOLD) {
+                Enes100.println("Switching back to navigation state. Too far away from waypoint.");
+                guidanceState = NAVIGATING_TO_WAYPOINT; //Reset to navigating to waypoint if too far away
+                break;
+            }
+
             float targetHeading = isHeadedUp ? PI / 2.0 : 3 * PI / 2.0;
             float diff = targetHeading - vehicle_position->theta;
             float normalized_diff = fmod(diff + PI, 2 * PI) - PI;
             float error = abs(normalized_diff);
-            if (normalized_diff > 0)
-            {
+            if (normalized_diff > 0) {
                 error *= -1;
             }
             float sign = normalized_diff / abs(normalized_diff);
 
             //Enes100.println("Waypoint has target heading. Turning.");
-            if (abs(error) > WAYPOINT_HEADING_THRESHOLD)
-            {
+            if (abs(error) > WAYPOINT_HEADING_THRESHOLD) {
                 // Enes100.println("Heading: " + String(targetHeading) + " Vehicle Heading: " + String(vehicle_position->theta) + " Diff: " + String(error));
             
                 info.steerBias = error < 0 ? -1.0 : 1.0; // Might need to be flipped lol
                 //info.driveSpeed = 0.5;
-                info.driveSpeed = max(0.5 + (2.0 * abs(error)), 0.4);
+                info.driveSpeed = 0.5;//max(0.5 + (2.0 * abs(error)), 0.4);
+            } else {
+                info.driveSpeed = 0.0;
+                guidanceState = PAUSED;
+                pauseStartTime = millis();
             }
-            else //Pointing in correct direction
+            break;
+        }
+        case PAUSED:
+        {
+            info.driveSpeed = 0.0;
+            if(millis() - pauseStartTime > PAUSE_TIME) {
+                guidanceState = SCANNING_POTENTIAL_OBSTACLE;
+                break;
+            }
+            break;
+        }
+        case SCANNING_POTENTIAL_OBSTACLE:
+        {
+            Enes100.println("Scanning");
+
+            // Determine if obstacle exists
+            if (isActiveWaypointGrid())
             {
-                // Enes100.println("Facing correct direction");
-
-                if(!isPaused) {
-                    isPaused = true;
-                    pauseStartTime = millis();
-                }
-
-                //Enes100.println("Paused: " + String(isPaused) + " Time: " + String(millis() - pauseStartTime) + "ms");
-
-                if (isPaused && millis() - pauseStartTime > PAUSE_TIME)
+                if (isHeadedUp && rd->right < OBSTACLE_DISTANCE_THRESHOLD || !isHeadedUp && rd->left < OBSTACLE_DISTANCE_THRESHOLD)
                 {
-                    Enes100.println("Scanning");
-                    isPaused = false;
-                    // Determine if obstacle exists
-                    if (isActiveWaypointGrid())
-                    {
-                        if (isHeadedUp && rd->right < OBSTACLE_DISTANCE_THRESHOLD || !isHeadedUp && rd->left < OBSTACLE_DISTANCE_THRESHOLD)
-                        {
-                            Enes100.println("Obstacle detected. Moving to next row");
-                            bool res = nextRow();
-                            if(!res) {
-                                isHeadedUp = !isHeadedUp;
-                                nextRow();
-                            }
-                        }
-                        else
-                        {
-                            Enes100.println("Distance to obstacle: " + String(isHeadedUp ? rd->right : rd->left));
-                            Enes100.println("No obstacle detected. Moving to next column");
-                            bool res = nextCol(); // No obstacle, move to next column
-                            if (!res)
-                            {
-                                Enes100.println("No more columns. All obstacles passed. Searching for next waypoint");
-                                clearColumn();
-                            }
-                        }
-                        Enes100.println("Active waypoint: " + String(active_waypoint));
-                    }
-                    else
-                    {
-                        moveToNext = true;
+                    Enes100.println("Obstacle detected. Moving to next row");
+                    bool res = nextRow();
+                    if(!res) {
+                        isHeadedUp = !isHeadedUp;
+                        nextRow();
                     }
                 }
                 else
                 {
-                    Enes100.println("Pausing for " + String(PAUSE_TIME) + "ms");
+                    Enes100.println("Distance to obstacle: " + String(isHeadedUp ? rd->right : rd->left));
+                    Enes100.println("No obstacle detected. Moving to next column");
+                    bool res = nextCol(); // No obstacle, move to next column
+                    if (!res)
+                    {
+                        Enes100.println("No more columns. All obstacles passed. Searching for next waypoint");
+                        clearColumn();
+                    }
+                }
+                Enes100.println("Active waypoint: " + String(active_waypoint));
+                guidanceState = NAVIGATING_TO_WAYPOINT;
+            } else {
+                bool nextWaypointRes = nextWaypoint();
+
+                Enes100.println("Proceeding to next waypoint (" + String(active_waypoint) + "/" + String(maxWaypointIndex) + ")");
+
+                if (!nextWaypointRes)
+                {
+                    // Stop driving
+                    info.driveSpeed = 0.0;
+                    guidanceState = FINISHED;
+                } else {
+                    guidanceState = NAVIGATING_TO_WAYPOINT;
                 }
             }
+            break;
         }
-        else
-        { // No target heading for waypoint
-            moveToNext = true;
-        }
-    }
-    else
-    {
-        info.steerBias = getUpdatedSteerBias();
-    }
-
-    if (moveToNext)
-    {
-        bool nextWaypointRes = nextWaypoint();
-
-        Enes100.println("Proceeding to next waypoint (" + String(active_waypoint) + "/" + String(maxWaypointIndex) + ")");
-
-        if (!nextWaypointRes)
+        default:
         {
-            // Stop driving
+            Enes100.println("GuidanceManager: ERROR! Invalid guidance state");
+            Serial.println("GuidanceManager: ERROR! Invalid guidance state");
             info.driveSpeed = 0.0;
+            info.steerBias = 0.0;
+            delay(1000);
         }
     }
 
-    updateLocation();
-
-    // Enes100.println("Steer Bias: " + String(info.steerBias));
-
-    if(isPaused) {
-        info.driveSpeed = 0.0;
-        info.steerBias = 0.0;
-    }
+    Enes100.println("Guidance state: " + String(guidanceState));
+    //Enes100.println("Drive speed: " + String(info.driveSpeed));
 
     return info;
 }
@@ -417,5 +452,20 @@ void GuidanceManager::clearColumn() {
         case 2:
             setActiveWaypoint(thirdRowClearIndex);
             break;
+    }
+}
+
+void GuidanceManager::determineStartPoint() {
+    VehiclePosition* pos = vehicle_position;
+
+    //The two possible starting positions
+    Waypoint* waypoint0 = getWaypoint(0);
+    Waypoint* waypoint1 = getWaypoint(1);
+
+    //If vehicle did not start at waypoint 0
+    if(getDistanceError() > 0.25) {
+        //Swap the two waypoints
+        getWaypoint(0)->index = 1;
+        getWaypoint(1)->index = 0;
     }
 }

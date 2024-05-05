@@ -30,8 +30,8 @@ void setup() {
   guidanceManager->setPidConfig(0.8, 0.01, 0.4);
 
   //Potential Starts
-  //guidanceManager->addWaypoint(0.42, 0.54, 0);
-  //guidanceManager->addWaypoint(0.42, 1.49, 1);
+  guidanceManager->addWaypoint(0.42, 0.54, 0);
+  guidanceManager->addWaypoint(0.42, 1.49, 1);
 
   //Navigation waypoints
   guidanceManager->addWaypoint(1.1, 0.6, 2, false, 0, true, 0, 0);
@@ -60,48 +60,10 @@ void setup() {
 }
 
 long last_time = millis();
-//bool has_init = false;
-bool has_init = true;
-
-//Determines if the vehicle started at waypoint 0 or 1
-void determineStartPoint() {
-  VehiclePosition* pos = guidanceManager->getPosition();
-
-  //The two possible starting positions
-  Waypoint* waypoint0 = guidanceManager->getWaypoint(0);
-  Waypoint* waypoint1 = guidanceManager->getWaypoint(1);
-  
-  //If vehicle did not start at waypoint 0
-  if(guidanceManager->getDistanceError() > 0.25) {
-    //Swap the two waypoints
-    guidanceManager->getWaypoint(0)->index = 1;
-    guidanceManager->getWaypoint(1)->index = 0;
-  }
-}
 
 void loop() {
   //Determine starting waypoint
-  if(!has_init) {
-    VehiclePosition* pos = guidanceManager->getPosition();
-    Serial.println("x: " + String(pos->x) + ", y: " + String(pos->y) + ", Valid: " + String(pos->valid));
-    if(guidanceManager->getPosition()->valid == true) {
-      Serial.println("Valid position. Determining start waypoint");
-      determineStartPoint();
-      has_init = true;
-    } else {
-      Serial.println("Waiting for valid position");
-    }
-  }
-
   VehiclePosition* pos = guidanceManager->getPosition();
-
-  if(!pos->valid) {
-    //Serial.println("Invalid position. Waiting");
-    motorController->setDriveSpeed(0.0);
-  } else {
-    //Serial.println("Valid position. Moving");
-    motorController->setDriveSpeed(speed);
-  }
 
   RangeData rd = sensorManager->getRange();
   GuidanceInfo gi = guidanceManager->tick(&rd);

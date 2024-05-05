@@ -28,12 +28,12 @@ void MotorController::setSteerBias(float steerAngle) {
         this->motors.left = (2.0 * steerAngle) + 1.0;
         this->motors.right = 1.0;
 
-        Serial.println("Left: " + String(this->motors.left) + " Right: " + String(this->motors.right));
+        //Serial.println("Left: " + String(this->motors.left) + " Right: " + String(this->motors.right));
     } else { //Turn right
         this->motors.left = 1.0;
         this->motors.right = (-2.0 * steerAngle) + 1.0;
 
-        Serial.println("Left: " + String(this->motors.left) + " Right: " + String(this->motors.right));
+        //Serial.println("Left: " + String(this->motors.left) + " Right: " + String(this->motors.right));
     }
 }
 
