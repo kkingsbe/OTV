@@ -7,7 +7,7 @@
 #define WIFI_RX 3
 #define WIFI_TX 2
 #define WAYPOINT_DISTANCE_THRESHOLD 0.25 //m
-#define WAYPOINT_HEADING_THRESHOLD 0.3 //rad
+#define WAYPOINT_HEADING_THRESHOLD 0.35 //rad
 #define OBSTACLE_DISTANCE_THRESHOLD 25 //cm
 #define PAUSE_TIME 1000 //ms
 
@@ -62,6 +62,7 @@ public:
     void setActiveWaypoint(int index);
     bool nextWaypoint(); //True if there is a next waypoint, false if there is not
     void setPidConfig(float kp, float ki, float kd);
+    void setZeroPointPidConfig(float kp, float ki, float kd);
     float getHeadingError();
     float getDistanceError();
     GuidanceInfo tick(RangeData* rd);
@@ -77,12 +78,15 @@ private:
     int total_waypoints;
     int active_waypoint;
     float integral;
+    float zero_point_integral;
     long last_time;
     float prev_err;
+    float prev_zero_point_err;
     void updateLocation();
     float getUpdatedSteerBias();
     float normalizeAngle(float angle);
     PIDConfig* pid_config;
+    PIDConfig* zero_point_pid_config;
     VehiclePosition* vehicle_position;
     long pauseStartTime;
     bool isHeadedUp; //True if checking increasing rows, false otherwise
@@ -90,7 +94,7 @@ private:
     void clearColumn();
     GuidanceState guidanceState;
     void determineStartPoint();
-    void navigateToWaypoint(GuidanceInfo* gi);
+    float getHeadingDelta(float testHeading);
 };
 
 #endif // SENSOR_MANAGER_H

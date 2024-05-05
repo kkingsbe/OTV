@@ -1,7 +1,7 @@
 #include "sensormanager.h"
 
 SensorManager::SensorManager() {
-
+    //scale = ScaleManager();
 }
 
 void SensorManager::init() {
@@ -73,4 +73,8 @@ RangeData SensorManager::getRange() {
     range.right = durationToCm(dur_right);
 
     return range;
+}
+
+void SensorManager::tick() {
+    //scale.tick();
 }

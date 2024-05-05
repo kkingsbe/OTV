@@ -2,10 +2,11 @@
 #define SENSOR_MANAGER_H
 
 #include <Arduino.h>
+#include "../scalemanager/scalemanager.h"
 
 //Configure sensor pins here
-#define FRONT_L_TRIG A3 //Working
-#define FRONT_L_ECHO 9  //Working
+#define FRONT_L_TRIG A4//A3 //Working
+#define FRONT_L_ECHO A4//9  //Working
 #define FRONT_R_TRIG A1 //Working
 #define FRONT_R_ECHO 12 //Working
 #define LEFT_TRIG A5    //Working
@@ -35,6 +36,9 @@ public:
     float durationToCm(long duration); // Function to convert duration to cm (for ultrasonic sensors
     float getWeight(); // Function to get the weight determined by the loadcells
     RangeData getRange(); // Function to get the range determined by the ultrasonic sensor
+    void tick();
+private:
+    ScaleManager scale;
 };
 
 #endif // SENSOR_MANAGER_H

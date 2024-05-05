@@ -4,9 +4,11 @@
 
 GuidanceManager::GuidanceManager() : total_waypoints(0),
                                      integral(0),
+                                     zero_point_integral(0),
                                      active_waypoint(0),
                                      last_time(millis()),
                                      prev_err(0),
+                                     prev_zero_point_err(0),
                                      pid_config(new PIDConfig{0.0, 0.0, 0.0}),
                                      vehicle_position(new VehiclePosition{-1.0, -1.0, 0.0, false}),
                                      pauseStartTime(millis()),
@@ -85,20 +87,17 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
         }
         case TURNING_TO_HEADING:
         {
+            /*
             if(getDistanceError() > WAYPOINT_DISTANCE_THRESHOLD) {
                 Enes100.println("Switching back to navigation state. Too far away from waypoint.");
                 guidanceState = NAVIGATING_TO_WAYPOINT; //Reset to navigating to waypoint if too far away
                 break;
             }
+            */
 
-            float targetHeading = isHeadedUp ? PI / 2.0 : 3 * PI / 2.0;
-            float diff = targetHeading - vehicle_position->theta;
-            float normalized_diff = fmod(diff + PI, 2 * PI) - PI;
-            float error = abs(normalized_diff);
-            if (normalized_diff > 0) {
-                error *= -1;
-            }
-            float sign = normalized_diff / abs(normalized_diff);
+            float targetHeading = isHeadedUp ? PI/2.0 : -PI/2.0;
+            float error = getHeadingDelta(targetHeading);
+            Enes100.println("Error: " + String(error));
 
             //Enes100.println("Waypoint has target heading. Turning.");
             if (abs(error) > WAYPOINT_HEADING_THRESHOLD) {
@@ -106,16 +105,49 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
             
                 info.steerBias = error < 0 ? -1.0 : 1.0; // Might need to be flipped lol
                 //info.driveSpeed = 0.5;
-                info.driveSpeed = 0.5;//max(0.5 + (2.0 * abs(error)), 0.4);
+
+                bool v = Enes100.isVisible();
+
+                float dt = (millis() - last_time) / 1000.0;
+                last_time = millis();
+
+                float error_abs = abs(error);
+
+                if (!v)
+                    error_abs = prev_zero_point_err;
+
+                zero_point_integral += error_abs * dt;
+                float derivative = (error_abs - prev_zero_point_err) / dt;
+                prev_zero_point_err = error_abs;
+
+                float p_term = zero_point_pid_config->kp * error_abs;
+                float i_term = zero_point_pid_config->ki * zero_point_integral;
+                float d_term = zero_point_pid_config->kd * derivative;
+
+                //Enes100.println("Error: " + String(error) + " P: " + String(p_term) + " I: " + String(i_term) + " D: " + String(d_term));
+
+                Enes100.println("Drive speed: " + String(0.3 + constrain(p_term + i_term + d_term, 0.0, 0.7)));
+                info.driveSpeed = 0.3 + constrain(p_term + i_term + d_term, 0.0, 0.7);
+                break;
             } else {
                 info.driveSpeed = 0.0;
                 guidanceState = PAUSED;
                 pauseStartTime = millis();
+                zero_point_integral = 0;
+                prev_zero_point_err = 0;
+                break;
             }
             break;
         }
         case PAUSED:
         {
+            float targetHeading = isHeadedUp ? PI/2.0 : -PI/2.0;
+            Enes100.println("Heading delta: " + String(getHeadingDelta(targetHeading)));
+            if(abs(getHeadingDelta(targetHeading)) > WAYPOINT_HEADING_THRESHOLD) {
+                guidanceState = TURNING_TO_HEADING;
+                break;
+            }
+            
             info.driveSpeed = 0.0;
             if(millis() - pauseStartTime > PAUSE_TIME) {
                 guidanceState = SCANNING_POTENTIAL_OBSTACLE;
@@ -189,6 +221,13 @@ void GuidanceManager::setPidConfig(float kp, float ki, float kd)
     pid_config->kp = kp;
     pid_config->ki = ki;
     pid_config->kd = kd;
+}
+
+void GuidanceManager::setZeroPointPidConfig(float kp, float ki, float kd)
+{
+    zero_point_pid_config->kp = kp;
+    zero_point_pid_config->ki = ki;
+    zero_point_pid_config->kd = kd;
 }
 
 void GuidanceManager::addWaypoint(float x, float y, int index, bool useHeading = false, float heading = 0.0, bool isGrid = false, int row = 0, int col = 0)
@@ -468,4 +507,15 @@ void GuidanceManager::determineStartPoint() {
         getWaypoint(0)->index = 1;
         getWaypoint(1)->index = 0;
     }
+}
+
+float GuidanceManager::getHeadingDelta(float testHeading) {
+    float diff = testHeading - vehicle_position->theta;
+    float normalized_diff = fmod(diff + PI, 2 * PI) - PI;
+    float error = abs(normalized_diff);
+    if (normalized_diff > 0) {
+        error *= -1;
+    }
+    float sign = normalized_diff / abs(normalized_diff);
+    return error;
 }
