@@ -7,7 +7,7 @@
 #define WIFI_RX 3
 #define WIFI_TX 2
 #define WAYPOINT_DISTANCE_THRESHOLD 0.25 //m
-#define WAYPOINT_HEADING_THRESHOLD 0.35 //rad
+#define WAYPOINT_HEADING_THRESHOLD 0.1 //rad
 #define OBSTACLE_DISTANCE_THRESHOLD 25 //cm
 #define PAUSE_TIME 1000 //ms
 
@@ -46,14 +46,19 @@ struct GuidanceInfo {
     float driveSpeed;
 };
 
+struct TurnToHeadingInfo {
+    GuidanceInfo gi;
+    bool isAligned;
+};
+
 enum GuidanceState {
     DETERMINING_START_POINT,
     NAVIGATING_TO_MISSION,
+    DETERMINING_MATERIAL,
     NAVIGATING_TO_WAYPOINT,
     TURNING_TO_HEADING,
     PAUSED,
     SCANNING_POTENTIAL_OBSTACLE,
-    CIRCLING_BLOCK,
     FINISHED
 };
 
@@ -101,6 +106,7 @@ private:
     GuidanceState guidanceState;
     void determineStartPoint();
     float getHeadingDelta(float testHeading);
+    TurnToHeadingInfo turnToHeading(float targetHeading);
 };
 
 #endif // SENSOR_MANAGER_H

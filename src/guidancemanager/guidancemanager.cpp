@@ -17,7 +17,6 @@ GuidanceManager::GuidanceManager() : total_waypoints(0),
                                      isHeadedUp(true),
                                      maxWaypointIndex(0),
                                      guidanceState(DETERMINING_START_POINT)
-                                     //guidanceState(PAUSED)
 {
 }
 
@@ -55,14 +54,29 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
             info.driveSpeed = 0.5;
             info.steerBias = getUpdatedSteerBias(); //Gets updated steer bias
             if(getDistanceError() < WAYPOINT_DISTANCE_THRESHOLD) {
-                //Pick up block by running into wall
+                //Scan block
                 if(active_waypoint == 0) {
                     setActiveWaypoint(2);
+                    guidanceState = DETERMINING_MATERIAL;
+                    pauseStartTime = millis();
                     break;
                 }
 
                 if(active_waypoint == 1) {
                     setActiveWaypoint(3);
+                    guidanceState = DETERMINING_MATERIAL;
+                    pauseStartTime = millis();
+                    break;
+                }
+
+                //Pick up block
+                if(active_waypoint == 2) {
+                    setActiveWaypoint(4);
+                    break;
+                }
+
+                if(active_waypoint == 3) {
+                    setActiveWaypoint(5);
                     break;
                 }
 
@@ -75,27 +89,20 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
             }
             break;
         }
-        case CIRCLING_BLOCK:
+        case DETERMINING_MATERIAL:
         {
-            float targetRadius = 0.15; //Radius of the circle around the block
-            float distanceToBlock = getDistanceError();
-            float angleToBlock = getHeadingError();
-            float angleToCircle = PI/2.0 - angleToBlock; //Default setpoint
+            TurnToHeadingInfo turnInfo = turnToHeading(getWaypoint(active_waypoint)->heading);
+            info = turnInfo.gi;
 
-            float error = targetRadius - distanceToBlock;
-            
-            float dt = (millis() - last_time) / 1000.0;
-            circle_integral += error * dt;
-            float derivative = (error - prev_circle_err) / dt;
-            prev_circle_err = error;
-
-            float p_term = circle_pid_config->kp * error;
-            float i_term = circle_pid_config->ki * circle_integral;
-            float d_term = circle_pid_config->kd * derivative;
-
-            float setpoint = constrain(p_term + i_term + d_term, -1.0, 1.0);
-            info.steerBias = setpoint;
-            info.driveSpeed = 0.5;
+            if(turnInfo.isAligned) {
+                //Pause for 5 seconds
+                if(millis() - pauseStartTime > 5000) {
+                    Enes100.println("Dist: " + String(rd->front_r));
+                    guidanceState = NAVIGATING_TO_MISSION;
+                }
+            } else {
+                pauseStartTime = millis();
+            }
 
             break;
         }
@@ -115,56 +122,17 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
         }
         case TURNING_TO_HEADING:
         {
-            /*
-            if(getDistanceError() > WAYPOINT_DISTANCE_THRESHOLD) {
-                Enes100.println("Switching back to navigation state. Too far away from waypoint.");
-                guidanceState = NAVIGATING_TO_WAYPOINT; //Reset to navigating to waypoint if too far away
-                break;
-            }
-            */
-
             float targetHeading = isHeadedUp ? PI/2.0 : -PI/2.0;
-            float error = getHeadingDelta(targetHeading);
-            Enes100.println("Error: " + String(error));
+            TurnToHeadingInfo turnInfo = turnToHeading(targetHeading);
+            info = turnInfo.gi;
 
-            //Enes100.println("Waypoint has target heading. Turning.");
-            if (abs(error) > WAYPOINT_HEADING_THRESHOLD) {
-                // Enes100.println("Heading: " + String(targetHeading) + " Vehicle Heading: " + String(vehicle_position->theta) + " Diff: " + String(error));
-            
-                info.steerBias = error < 0 ? -1.0 : 1.0; // Might need to be flipped lol
-                //info.driveSpeed = 0.5;
-
-                bool v = Enes100.isVisible();
-
-                float dt = (millis() - last_time) / 1000.0;
-                last_time = millis();
-
-                float error_abs = abs(error);
-
-                if (!v)
-                    error_abs = prev_zero_point_err;
-
-                zero_point_integral += error_abs * dt;
-                float derivative = (error_abs - prev_zero_point_err) / dt;
-                prev_zero_point_err = error_abs;
-
-                float p_term = zero_point_pid_config->kp * error_abs;
-                float i_term = zero_point_pid_config->ki * zero_point_integral;
-                float d_term = zero_point_pid_config->kd * derivative;
-
-                //Enes100.println("Error: " + String(error) + " P: " + String(p_term) + " I: " + String(i_term) + " D: " + String(d_term));
-
-                Enes100.println("Drive speed: " + String(0.3 + constrain(p_term + i_term + d_term, 0.0, 0.7)));
-                info.driveSpeed = 0.3 + constrain(p_term + i_term + d_term, 0.0, 0.7);
-                break;
-            } else {
-                info.driveSpeed = 0.0;
+            if(turnInfo.isAligned) {
                 guidanceState = PAUSED;
                 pauseStartTime = millis();
-                zero_point_integral = 0;
-                prev_zero_point_err = 0;
-                break;
+                info.driveSpeed = 0.0;
+                info.steerBias = 0.0;
             }
+
             break;
         }
         case PAUSED:
@@ -546,11 +514,68 @@ void GuidanceManager::determineStartPoint() {
 
 float GuidanceManager::getHeadingDelta(float testHeading) {
     float diff = testHeading - vehicle_position->theta;
-    float normalized_diff = fmod(diff + PI, 2 * PI) - PI;
-    float error = abs(normalized_diff);
-    if (normalized_diff > 0) {
-        error *= -1;
+    
+    // Normalize the difference to the range of -2π to 2π
+    float normalized_diff = fmod(diff, 2 * PI);
+    
+    // Adjust the normalized difference to be within the range of -π to π
+    if (normalized_diff > PI) {
+        normalized_diff -= 2 * PI;
+    } else if (normalized_diff < -PI) {
+        normalized_diff += 2 * PI;
     }
-    float sign = normalized_diff / abs(normalized_diff);
-    return error;
+    
+    return -normalized_diff;
+}
+
+TurnToHeadingInfo GuidanceManager::turnToHeading(float targetHeading) {
+    GuidanceInfo info = { 0.0, 0.0 };
+    TurnToHeadingInfo turnInfo = { info, true };
+    float error = getHeadingDelta(targetHeading);
+    //float error = (2.0 * PI) + targetHeading - vehicle_position->theta;
+    Enes100.println("Error: " + String(error));
+
+    //Enes100.println("Waypoint has target heading. Turning.");
+    if (abs(error) > WAYPOINT_HEADING_THRESHOLD) {
+        turnInfo.isAligned = false;
+        // Enes100.println("Heading: " + String(targetHeading) + " Vehicle Heading: " + String(vehicle_position->theta) + " Diff: " + String(error));
+    
+        turnInfo.gi.steerBias = error < 0 ? -1.0 : 1.0; // Might need to be flipped lol
+        //info.driveSpeed = 0.5;
+
+        bool v = Enes100.isVisible();
+
+        float dt = (millis() - last_time) / 1000.0;
+        last_time = millis();
+
+        float error_abs = abs(error);
+
+        if (!v)
+            error_abs = prev_zero_point_err;
+
+        zero_point_integral += error_abs * dt;
+        float derivative = (error_abs - prev_zero_point_err) / dt;
+        prev_zero_point_err = error_abs;
+
+        float p_term = zero_point_pid_config->kp * error_abs;
+        float i_term = zero_point_pid_config->ki * zero_point_integral;
+        float d_term = zero_point_pid_config->kd * derivative;
+
+        //Enes100.println("Error: " + String(error) + " P: " + String(p_term) + " I: " + String(i_term) + " D: " + String(d_term));
+
+        turnInfo.gi.driveSpeed = constrain(p_term + i_term + d_term, 0.0, 1.0);
+
+        if(!vehicle_position->valid) {
+            turnInfo.gi.driveSpeed = 0.0;
+        }
+    } else {
+        turnInfo.gi.driveSpeed = 0.0;
+        zero_point_integral = 0;
+        prev_zero_point_err = 0;
+        turnInfo.isAligned = true;
+    }
+    
+    Enes100.println("Drive speed: " + String(turnInfo.gi.driveSpeed));
+
+    return turnInfo;
 }
