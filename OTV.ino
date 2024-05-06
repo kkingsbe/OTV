@@ -32,26 +32,37 @@ void setup() {
   guidanceManager->setCirclePidConfig(2.0, 0, 0);
 
   //Potential Starts
+  /*
   guidanceManager->addWaypoint(0.3, 0.54, 0);
   guidanceManager->addWaypoint(0.3, 1.49, 1);
-  //guidanceManager->addWaypoint(0.3, 1.0, 0);
+  */
+  guidanceManager->addWaypoint(3.3, 0.54, 0);
+  guidanceManager->addWaypoint(3.3, 1.49, 1);
+
+  //Run into the wall after the mission site
+  /*
+  guidanceManager->addWaypoint(0.3, 0.1, 2);
+  guidanceManager->addWaypoint(0.3, 2.0, 3);
+  */
+  guidanceManager->addWaypoint(3.3, 0.0, 2);
+  guidanceManager->addWaypoint(3.3, 2.0, 3);
 
   //Navigation waypoints
-  guidanceManager->addWaypoint(1.1, 0.6, 2, false, 0, true, 0, 0);
-  guidanceManager->addWaypoint(1.1, 1.3, 3, false, 0, true, 1, 0);
-  guidanceManager->addWaypoint(1.1, 1.7, 4, false, 0, true, 2, 0);
+  guidanceManager->addWaypoint(1.1, 0.6, 4, false, 0, true, 0, 0);
+  guidanceManager->addWaypoint(1.1, 1.3, 5, false, 0, true, 1, 0);
+  guidanceManager->addWaypoint(1.1, 1.7, 6, false, 0, true, 2, 0);
 
-  guidanceManager->addWaypoint(1.9, 0.6, 7, false, 0, true, 0, 1);
-  guidanceManager->addWaypoint(1.9, 1.3, 6, false, 0, true, 1, 1);
-  guidanceManager->addWaypoint(1.9, 1.7, 5, false, 0, true, 2, 1);
+  guidanceManager->addWaypoint(1.9, 0.6, 9, false, 0, true, 0, 1);
+  guidanceManager->addWaypoint(1.9, 1.3, 8, false, 0, true, 1, 1);
+  guidanceManager->addWaypoint(1.9, 1.7, 7, false, 0, true, 2, 1);
 
   //Clear last column
-  guidanceManager->addWaypoint(3.0, 0.6, 8);
-  guidanceManager->addWaypoint(3.0, 1.0, 9);
-  guidanceManager->addWaypoint(3.0, 1.4, 10);
+  guidanceManager->addWaypoint(3.0, 0.6, 10);
+  guidanceManager->addWaypoint(3.0, 1.0, 11);
+  guidanceManager->addWaypoint(3.0, 1.4, 12);
 
-  guidanceManager->addWaypoint(3.0, 1.5, 11);  //Line up with limbo
-  guidanceManager->addWaypoint(3.5, 1.5, 12);  //Pass limbo
+  guidanceManager->addWaypoint(3.0, 1.5, 13);  //Line up with limbo
+  guidanceManager->addWaypoint(3.5, 1.5, 14);  //Pass limbo
 
   //guidanceManager->setActiveWaypoint(2);
   guidanceManager->setActiveWaypoint(0);

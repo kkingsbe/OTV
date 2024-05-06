@@ -54,12 +54,23 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
         {
             info.driveSpeed = 0.5;
             info.steerBias = getUpdatedSteerBias(); //Gets updated steer bias
-            Enes100.println("Steer bias: " + String(info.steerBias));
             if(getDistanceError() < WAYPOINT_DISTANCE_THRESHOLD) {
-                if(getWaypoint(active_waypoint)->isGrid) {
-                    guidanceState = CIRCLING_BLOCK;
-                } else {
-                    nextWaypoint();
+                //Pick up block by running into wall
+                if(active_waypoint == 0) {
+                    setActiveWaypoint(2);
+                    break;
+                }
+
+                if(active_waypoint == 1) {
+                    setActiveWaypoint(3);
+                    break;
+                }
+
+                //Go to waypoint 4 if already picked up block
+                if(active_waypoint == 2 || active_waypoint == 3) {
+                    setActiveWaypoint(4);
+                    guidanceState = NAVIGATING_TO_WAYPOINT;
+                    break;
                 }
             }
             break;
