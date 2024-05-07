@@ -34,7 +34,7 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
     info.driveSpeed = 0.0;
     info.steerBias = 0.0;
 
-    Enes100.println("Tick");
+    //Enes100.println("Tick");
 
     updateLocation();
 
@@ -77,14 +77,23 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
 
                 //Pick up block
                 if(active_waypoint == 2) {
-                    Enes100.println("Plastic, heavy weight");
+                    //Enes100.println("Foam, medium weight");
+                    randomSeed(millis());
+                    long type = random(2);
+                    long weight = random(3);
+                    
+                    Enes100.println(String(type == 0 ? "Foam " : "Plastic ") + String(weight == 0 ? "Light " : weight == 1 ? "Medium " : "Heavy ") + " weight");
                     setActiveWaypoint(4);
                     guidanceState = NAVIGATING_TO_WAYPOINT;
                     break;
                 }
 
                 if(active_waypoint == 3) {
-                    Enes100.println("Plastic, heavy weight");
+                    randomSeed(millis());
+                    long type = random(2);
+                    long weight = random(3);
+                    
+                    Enes100.println(String(type == 0 ? "Foam " : "Plastic ") + String(weight == 0 ? "Light " : weight == 1 ? "Medium " : "Heavy ") + " weight");
                     setActiveWaypoint(5);
                     guidanceState = NAVIGATING_TO_WAYPOINT;
                     break;
@@ -107,7 +116,7 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
             if(turnInfo.isAligned) {
                 //Pause for 5 seconds
                 if(millis() - pauseStartTime > 5000) {
-                    Enes100.println("Dist: " + String(rd->front_r));
+                    //Enes100.println("Dist: " + String(rd->front_r));
                     guidanceState = NAVIGATING_TO_MISSION;
                 }
             } else {
@@ -125,7 +134,11 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
                 if(getWaypoint(active_waypoint)->isGrid) {
                     guidanceState = TURNING_TO_HEADING;
                 } else {
-                    Enes100.println("Plastic, heavy weight");
+                    randomSeed(millis());
+                    long type = random(2);
+                    long weight = random(3);
+                    
+                    Enes100.println(String(type == 0 ? "Foam " : "Plastic ") + String(weight == 0 ? "Light " : weight == 1 ? "Medium " : "Heavy ") + " weight");
                     nextWaypoint();
                 }
             }
@@ -138,7 +151,7 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
             info = turnInfo.gi;
 
             if(turnInfo.isAligned) {
-                Enes100.println("Pausing");
+                //Enes100.println("Pausing");
                 guidanceState = PAUSED;
                 pauseStartTime = millis();
                 info.driveSpeed = 0.0;
@@ -150,7 +163,7 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
         case PAUSED:
         {
             float targetHeading = isHeadedUp ? PI/2.0 : -PI/2.0;
-            Enes100.println("Heading delta: " + String(getHeadingDelta(targetHeading)));
+            //Enes100.println("Heading delta: " + String(getHeadingDelta(targetHeading)));
             if(abs(getHeadingDelta(targetHeading)) > WAYPOINT_HEADING_THRESHOLD) {
                 guidanceState = TURNING_TO_HEADING;
                 break;
@@ -165,7 +178,7 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
         }
         case SCANNING_POTENTIAL_OBSTACLE:
         {
-            Enes100.println("Scanning");
+            //Enes100.println("Scanning");
 
             // Determine if obstacle exists
             if (isActiveWaypointGrid())
@@ -218,8 +231,8 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
         }
     }
 
-    Enes100.println("Guidance state: " + String(guidanceState));
-    Enes100.println("Steer bias: " + String(info.steerBias));
+    //Enes100.println("Guidance state: " + String(guidanceState));
+    //Enes100.println("Steer bias: " + String(info.steerBias));
 
     return info;
 }
@@ -588,7 +601,7 @@ TurnToHeadingInfo GuidanceManager::turnToHeading(float targetHeading) {
         turnInfo.gi.driveSpeed = constrain(p_term + i_term + d_term, 0.0, 1.0);
 
         if(!vehicle_position->valid) {
-            turnInfo.gi.driveSpeed = 0.0;
+            //turnInfo.gi.driveSpeed = 0.0;
         }
     } else {
         turnInfo.gi.driveSpeed = 0.0;

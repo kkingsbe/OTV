@@ -1,4 +1,4 @@
-#include "src/motorcontroller/motorcontroller.h"
+ #include "src/motorcontroller/motorcontroller.h"
 #include "src/sensormanager/sensormanager.h"
 #include "src/guidancemanager/guidancemanager.h"
 #include "src/armcontroller/armcontroller.h"
@@ -28,7 +28,7 @@ void setup() {
   //Becomes unstable at kp=0.8
   //guidanceManager->setPidConfig(0.8, 0.01, 0.2);
   guidanceManager->setPidConfig(0.8, 0.01, 0.4);
-  guidanceManager->setZeroPointPidConfig(0.2, 0.01, 0.4);
+  guidanceManager->setZeroPointPidConfig(0.6, 0.15, 0.05);
   guidanceManager->setCirclePidConfig(2.0, 0, 0);
 
   //Potential Starts  
@@ -45,17 +45,17 @@ void setup() {
   //guidanceManager->addWaypoint(0.25, 1.49, 3, true, PI/2.0);
 
   //Run into the wall after the mission site
-  guidanceManager->addWaypoint(0.25, 0.25, 1);
-  guidanceManager->addWaypoint(0.25, 1.5, 3);
+  guidanceManager->addWaypoint(0.25, 0.1, 1);
+  guidanceManager->addWaypoint(0.25, 1.9, 3);
   /*
   guidanceManager->addWaypoint(3.3, 0.2, 4);
   guidanceManager->addWaypoint(3.3, 1.8, 5);
   */
 
   //Navigation waypoints
-  guidanceManager->addWaypoint(1.1, 0.6, 4, false, 0, true, 0, 0);
-  guidanceManager->addWaypoint(1.1, 1.3, 5, false, 0, true, 1, 0);
-  guidanceManager->addWaypoint(1.1, 1.7, 6, false, 0, true, 2, 0);
+  guidanceManager->addWaypoint(1.3, 0.6, 4, false, 0, true, 0, 0);
+  guidanceManager->addWaypoint(1.3, 1.3, 5, false, 0, true, 1, 0);
+  guidanceManager->addWaypoint(1.3, 1.7, 6, false, 0, true, 2, 0);
 
   guidanceManager->addWaypoint(1.9, 0.6, 9, false, 0, true, 0, 1);
   guidanceManager->addWaypoint(1.9, 1.3, 8, false, 0, true, 1, 1);
