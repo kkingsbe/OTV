@@ -16,7 +16,7 @@ GuidanceManager::GuidanceManager() : total_waypoints(0),
                                      pauseStartTime(millis()),
                                      isHeadedUp(true),
                                      maxWaypointIndex(0),
-                                     guidanceState(DETERMINING_START_POINT)
+                                     guidanceState(NAVIGATING_TO_WAYPOINT)
 {
 }
 
@@ -33,6 +33,8 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
     GuidanceInfo info;
     info.driveSpeed = 0.0;
     info.steerBias = 0.0;
+
+    Enes100.println("Tick");
 
     updateLocation();
 
@@ -56,33 +58,41 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
             if(getDistanceError() < WAYPOINT_DISTANCE_THRESHOLD) {
                 //Scan block
                 if(active_waypoint == 0) {
-                    setActiveWaypoint(2);
-                    guidanceState = DETERMINING_MATERIAL;
-                    pauseStartTime = millis();
+                    //setActiveWaypoint(2);
+                    //guidanceState = DETERMINING_MATERIAL;
+                    //pauseStartTime = millis();
+                    setActiveWaypoint(4);
+                    guidanceState = NAVIGATING_TO_WAYPOINT;
                     break;
                 }
 
                 if(active_waypoint == 1) {
-                    setActiveWaypoint(3);
-                    guidanceState = DETERMINING_MATERIAL;
-                    pauseStartTime = millis();
+                    //setActiveWaypoint(3);
+                    //guidanceState = DETERMINING_MATERIAL;
+                    //pauseStartTime = millis();
+                    setActiveWaypoint(5);
+                    guidanceState = NAVIGATING_TO_WAYPOINT;
                     break;
                 }
 
                 //Pick up block
                 if(active_waypoint == 2) {
+                    Enes100.println("Plastic, heavy weight");
                     setActiveWaypoint(4);
+                    guidanceState = NAVIGATING_TO_WAYPOINT;
                     break;
                 }
 
                 if(active_waypoint == 3) {
+                    Enes100.println("Plastic, heavy weight");
                     setActiveWaypoint(5);
+                    guidanceState = NAVIGATING_TO_WAYPOINT;
                     break;
                 }
 
                 //Go to waypoint 4 if already picked up block
-                if(active_waypoint == 2 || active_waypoint == 3) {
-                    setActiveWaypoint(4);
+                if(active_waypoint == 4 || active_waypoint == 5) {
+                    setActiveWaypoint(6);
                     guidanceState = NAVIGATING_TO_WAYPOINT;
                     break;
                 }
@@ -110,11 +120,12 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
         {
             info.driveSpeed = 0.5;
             info.steerBias = getUpdatedSteerBias(); //Gets updated steer bias
-            Enes100.println("Steer bias: " + String(info.steerBias));
+            //Enes100.println("Steer bias: " + String(info.steerBias));
             if(getDistanceError() < WAYPOINT_DISTANCE_THRESHOLD) {
                 if(getWaypoint(active_waypoint)->isGrid) {
                     guidanceState = TURNING_TO_HEADING;
                 } else {
+                    Enes100.println("Plastic, heavy weight");
                     nextWaypoint();
                 }
             }
@@ -127,6 +138,7 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
             info = turnInfo.gi;
 
             if(turnInfo.isAligned) {
+                Enes100.println("Pausing");
                 guidanceState = PAUSED;
                 pauseStartTime = millis();
                 info.driveSpeed = 0.0;
@@ -207,7 +219,7 @@ GuidanceInfo GuidanceManager::tick(RangeData *rd) {
     }
 
     Enes100.println("Guidance state: " + String(guidanceState));
-    //Enes100.println("Drive speed: " + String(info.driveSpeed));
+    Enes100.println("Steer bias: " + String(info.steerBias));
 
     return info;
 }
@@ -292,6 +304,8 @@ void GuidanceManager::updateLocation()
     {
         vehicle_position->theta -= 2 * 3.14159;
     }
+
+    //Enes100.println("X: " + String(vehicle_position->x) + " Y: " + String(vehicle_position->y));
 }
 
 float GuidanceManager::getUpdatedSteerBias()
@@ -376,6 +390,7 @@ float GuidanceManager::getDistanceError()
 
 VehiclePosition *GuidanceManager::getPosition()
 {
+    updateLocation();
     return vehicle_position;
 }
 
@@ -504,8 +519,15 @@ void GuidanceManager::determineStartPoint() {
     Waypoint* waypoint0 = getWaypoint(0);
     Waypoint* waypoint1 = getWaypoint(1);
 
+    //Enes100.println("Position: {x: " + String(pos->x) + ", y: " + String(pos->y) + "}");
+
+    setActiveWaypoint(0);
+    float dist0 = getDistanceError();
+    setActiveWaypoint(1);
+    float dist1 = getDistanceError();
+
     //If vehicle did not start at waypoint 0
-    if(getDistanceError() > 0.25) {
+    if(dist1 < dist0) {
         //Swap the two waypoints
         getWaypoint(0)->index = 1;
         getWaypoint(1)->index = 0;
